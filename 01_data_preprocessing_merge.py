@@ -9,7 +9,6 @@ from collections import OrderedDict
 import os, glob
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
-# script_dir = 'D:\Github\ActionNet'
 
 # from helpers import *
 from utils.print_utils import *
