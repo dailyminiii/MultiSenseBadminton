@@ -6,6 +6,7 @@ import shutil
 import time
 import pickle
 import pyperclip
+from keras import regularizers
 
 import tensorflow as tf
 from keras.callbacks import ModelCheckpoint
@@ -17,7 +18,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import f1_score, precision_score, recall_score
 
-from helpers import *
 from utils.print_utils import *
 from utils.dict_utils import *
 from utils.time_utils import *
@@ -52,6 +52,8 @@ save_outputs = True
 # Training settings.
 num_epochs = 50
 batch_size = 64
+learning_rate = 0.001
+
 # Define the number of features per sensor in the processed data files that will be used.
 #  Will use these to create mini networks for each sensor path.
 num_features_perSensor = {
@@ -72,7 +74,7 @@ percentExamples_test_validation_sets = 20  # ignored if doing holdouts # a perce
 accuracy_table_toCopy = ''  # will print an accuracy table that can be copied into Excel
 for sensor_subset in sensor_subsets:
     # Select input data.
-    data_processed_filename = 'data_processed_allStreams_0205s_60hz_20subj_ex150-150_allActs_all_15_20_10_10_v1.hdf5'
+    data_processed_filename = 'StrokeType_allSensors.hdf5' # 'data_processed_allStreams_0205s_60hz_20subj_ex150-150_allActs_all_15_20_10_10_v1.hdf5'
     data_processed_filepath = os.path.join(data_processed_root_dir, data_processed_filename)
 
     # Define the output folder based on the desired sensor subset.
@@ -164,9 +166,13 @@ for sensor_subset in sensor_subsets:
         {'type': 'lambda', 'lambda_fn': lambda x, _feature_index_start=feature_index_start,
                                                _num_features_forSensor=num_features_forSensor: x[:, :,
                                                                                                _feature_index_start:(
-                                                                                                           _feature_index_start + _num_features_forSensor)],
+                                                                                                       _feature_index_start + _num_features_forSensor)],
          'output_shape': (segment_length, num_features_forSensor)},
-        {'type': 'lstm', 'size': 5, 'return_sequences': True}
+        {'type': 'conv1d', 'filters': 200,
+         'kernel_size': 20},
+        {'type': 'batch_norm'},
+        {'type': 'relu'},
+        {'type': 'dropout', 'ratio': 0.5},
     ]
     feature_index_start += num_features_forSensor
     num_features_forSensor = num_features_perSensor['gforce']
@@ -174,10 +180,16 @@ for sensor_subset in sensor_subsets:
         {'type': 'lambda', 'lambda_fn': lambda x, _feature_index_start=feature_index_start,
                                                _num_features_forSensor=num_features_forSensor: x[:, :,
                                                                                                _feature_index_start:(
-                                                                                                           _feature_index_start + _num_features_forSensor)],
+                                                                                                       _feature_index_start + _num_features_forSensor)],
          'output_shape': (segment_length, num_features_forSensor)},
-        {'type': 'lstm', 'size': 5, 'return_sequences': True}
+
+        {'type': 'conv1d', 'filters': 200,
+         'kernel_size': 20},
+        {'type': 'batch_norm'},
+        {'type': 'relu'},
+        {'type': 'dropout', 'ratio': 0.5},
     ]
+
     feature_index_start += num_features_forSensor
     num_features_forSensor = num_features_perSensor['cognionics']
     network_layers_perSensor['cognionics'] = [
@@ -186,18 +198,30 @@ for sensor_subset in sensor_subsets:
                                                                                                _feature_index_start:(
                                                                                                        _feature_index_start + _num_features_forSensor)],
          'output_shape': (segment_length, num_features_forSensor)},
-        {'type': 'lstm', 'size': 5, 'return_sequences': True}
+
+        {'type': 'conv1d', 'filters': 200,
+         'kernel_size': 20},
+        {'type': 'batch_norm'},
+        {'type': 'relu'},
+        {'type': 'dropout', 'ratio': 0.5},
     ]
+
     feature_index_start += num_features_forSensor
     num_features_forSensor = num_features_perSensor['insole']
     network_layers_perSensor['insole'] = [
         {'type': 'lambda', 'lambda_fn': lambda x, _feature_index_start=feature_index_start,
                                                _num_features_forSensor=num_features_forSensor: x[:, :,
                                                                                                _feature_index_start:(
-                                                                                                           _feature_index_start + _num_features_forSensor)],
+                                                                                                       _feature_index_start + _num_features_forSensor)],
          'output_shape': (segment_length, num_features_forSensor)},
-        {'type': 'lstm', 'size': 5, 'return_sequences': True}
+
+        {'type': 'conv1d', 'filters': 200,
+         'kernel_size': 20},
+        {'type': 'batch_norm'},
+        {'type': 'relu'},
+        {'type': 'dropout', 'ratio': 0.5},
     ]
+
     feature_index_start += num_features_forSensor
     num_features_forSensor = num_features_perSensor['body']
     network_layers_perSensor['body'] = [
@@ -206,8 +230,15 @@ for sensor_subset in sensor_subsets:
                                                                                                _feature_index_start:(
                                                                                                        _feature_index_start + _num_features_forSensor)],
          'output_shape': (segment_length, num_features_forSensor)},
-        {'type': 'lstm', 'size': 5, 'return_sequences': True}
+
+        {'type': 'conv1d', 'filters': 200,
+         'kernel_size': 20},
+        {'type': 'batch_norm'},
+        {'type': 'relu'},
+        # {'type': 'global_pooling'},
+        {'type': 'dropout', 'ratio': 0.5},
     ]
+
     # Only use the desired sensor types.
     if sensor_subset == 'noGforce':
         del network_layers_perSensor['gforce']
@@ -224,20 +255,26 @@ for sensor_subset in sensor_subsets:
     if sensor_subset == 'onlyCognionics':
         network_layers_perSensor = {'cognionics': network_layers_perSensor['cognionics']}
     if sensor_subset == 'onlyEye':
-        network_layers_perSensor = {'eye': network_layers_perSensor['eye']}
+        network_layers_perSensor = {'eye': network_layers_perSensor['eye'], }
     if sensor_subset == 'onlyInsole':
-        network_layers_perSensor = {'insole': network_layers_perSensor['insole']}
+        network_layers_perSensor = {'insole': network_layers_perSensor['insole'], }
     if sensor_subset == 'onlyBody':
-        network_layers_perSensor = {'body': network_layers_perSensor['body']}
+        network_layers_perSensor = {'body': network_layers_perSensor['body'], }
+
+    print('network_layers_perSensor')
+    print(network_layers_perSensor)
 
     # Create the overall network that includes the sub-networks.
     network_layers = [
         # Pathways for each sensor
         list(network_layers_perSensor.values()),
-        # Merged pathway
-        {'type': 'lstm', 'size': 40, 'return_sequences': False}, # 50
-        {'type': 'dropout', 'ratio': 0.3},
-        {'type': 'dense', 'size': num_labels, 'activation': 'softmax'},
+
+        {'type': 'conv1d', 'filters': 256, 'kernel_size': 35},
+        {'type': 'batch_norm'},
+        {'type': 'relu'},
+        {'type': 'global_pooling'},
+        {'type': 'dropout', 'ratio': 0.65},
+        {'type': 'dense', 'size': num_labels, 'kernel_init': tf.keras.initializers.he_normal, 'activation': 'softmax'}
     ]
 
     ################################################
@@ -336,17 +373,6 @@ for sensor_subset in sensor_subsets:
         len(y_val), ' '.join(['%5d' % sum([y == lbli for y in y_val]) for lbli in label_indexes_all])))
         print()
 
-
-        # # Save the data to the output file (takes up a lot of space though).
-        # if fout is not None:
-        #   fout.create_group('data')
-        #   fout['data'].create_dataset('X_train', data=X_train)
-        #   fout['data'].create_dataset('X_val', data=X_val)
-        #   fout['data'].create_dataset('X_test', data=X_test)
-        #   fout['data'].create_dataset('y_train', data=X_train)
-        #   fout['data'].create_dataset('y_val', data=X_val)
-        #   fout['data'].create_dataset('y_test', data=X_test)
-
         # Convert to datasets
         # Note that it will also convert labels to one-hot encodings
 
@@ -382,6 +408,20 @@ for sensor_subset in sensor_subsets:
         def add_layer(current_layers, layer_info):
             if layer_info['type'] == 'reshape_for_lstm':
                 layer = tf.keras.layers.Reshape([segment_length, num_features])
+            elif layer_info['type'] == 'reshape':
+                layer = tf.keras.layers.Permute((2, 1))
+            elif layer_info['type'] == 'conv1d':
+                layer = tf.keras.layers.Conv1D(
+                    eval(layer_info['filters']) if isinstance(layer_info['filters'], str) else layer_info['filters'],
+                    eval(layer_info['kernel_size']) if isinstance(layer_info['kernel_size'], str) else layer_info[
+                        'kernel_size'],
+                    padding='same', kernel_initializer='he_uniform')
+            elif layer_info['type'] == 'batch_norm':
+                layer = tf.keras.layers.BatchNormalization()
+            elif layer_info['type'] == 'relu':
+                layer = tf.keras.layers.Activation('relu')
+            elif layer_info['type'] == 'global_pooling':
+                layer = tf.keras.layers.GlobalAveragePooling1D()
             elif layer_info['type'] == 'lstm':
                 layer = tf.keras.layers.LSTM(
                     eval(layer_info['size']) if isinstance(layer_info['size'], str) else layer_info['size'],
@@ -389,16 +429,31 @@ for sensor_subset in sensor_subsets:
             elif layer_info['type'] == 'dense':
                 layer = tf.keras.layers.Dense(
                     eval(layer_info['size']) if isinstance(layer_info['size'], str) else layer_info['size'],
+                    kernel_regularizer=regularizers.l2(0.001),
+                    kernel_initializer=eval(layer_info['kernel_init']) if isinstance(layer_info['kernel_init'],
+                                                                                     str) else layer_info[
+                        'kernel_init'],
                     activation=layer_info['activation'] or 'relu')
             elif layer_info['type'] == 'dropout':
                 layer = tf.keras.layers.Dropout(layer_info['ratio'])
             elif layer_info['type'] == 'lambda':
                 layer = tf.keras.layers.Lambda(layer_info['lambda_fn'], layer_info['output_shape'])
+            elif layer_info['type'] == 'squeeze_excite_block':
+                filters = current_layers.shape[-1]
+                layer = tf.keras.layers.GlobalAveragePooling1D()(current_layers)
+                layer = tf.keras.layers.Reshape((1, filters))(layer)
+                layer = tf.keras.layers.Dense(filters // layer_info['reduction_ratio'], activation='relu',
+                                              kernel_initializer='he_normal', use_bias=False)(layer)
+                layer = tf.keras.layers.Dense(filters, activation='sigmoid', kernel_initializer='he_normal',
+                                              use_bias=False)(layer)
+                layer = tf.keras.layers.multiply([current_layers, layer])
+                return layer
             return layer(current_layers)
 
 
         # Add an input layer.
         input_layer = tf.keras.layers.Input(shape=np.squeeze(feature_matrices[0, :, :]).shape)
+        print('Shape of input layer : ', input_layer.shape)
         # Add the specified layers.
         output_layer = input_layer
         for layer_info in network_layers:
@@ -427,9 +482,12 @@ for sensor_subset in sensor_subsets:
             else:
                 output_layer = add_layer(output_layer, layer_info)
 
-        model = tf.keras.models.Model(inputs=input_layer, outputs=output_layer)
+        print('input layer : ', input_layer)
+        print('output layer : ', output_layer)
 
-        model.compile(optimizer='adam',
+        model = tf.keras.models.Model(inputs=input_layer, outputs=output_layer)
+        optm = tf.keras.optimizers.Adam(learning_rate=learning_rate, decay=1e-4)
+        model.compile(optimizer=optm,
                       # tf.keras.optimizers.SGD(learning_rate = 0.01, momentum = 0.0, nesterov = False),
                       loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
                       # from_logits is False since already outputting probabilities from the network (via softmax)
@@ -686,23 +744,3 @@ for sensor_subset in sensor_subsets:
         pyperclip.copy(accuracy_table_toCopy)
     except:
         pass
-    print()
-    print()
-
-    # Copy the PyCharm console output to the output folder.
-    if save_outputs:
-        output_filepath = os.path.join(output_dir,
-                                       'pycharm_console_streaming_trainNetwork_%s.txt' % get_time_str())
-        output_filepath = append_to_get_unique_filepath(output_filepath, append_format='_run%02d')
-
-        console_output_filepath = os.path.join(data_processed_root_dir, 'pycharm_console_streaming_trainNetwork.txt')
-
-        try:
-            time.sleep(2)  # helps make sure console output was flushed to the streaming file
-            shutil.copy(console_output_filepath, output_filepath)
-        except:
-            print('Could not copy the pycharm console output text file')
-            print('Check that the console is set to save logs to %s' % console_output_filepath)
-            print()
-
-    print()

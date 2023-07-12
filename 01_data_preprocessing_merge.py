@@ -11,7 +11,7 @@ import os, glob
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # script_dir = 'D:\Github\ActionNet'
 
-from helpers import *
+# from helpers import *
 from utils.print_utils import *
 from utils.dict_utils import *
 from utils.time_utils import *
@@ -22,60 +22,57 @@ from utils.time_utils import *
 
 # Define where outputs will be saved.
 output_dir = os.path.join(script_dir, 'data_processed')
-output_filepath = os.path.join(output_dir, 'data_processed_allStreams_0205s_60hz_21subj_ex150-150_allActs_all_15_20_10_10.hdf5')
+output_filepath = os.path.join(output_dir, 'data_processed_allStreams_60hz_21subj_allActs.hdf5')
 # output_filepath = None
-#
+
 # Define the modalities to use.
 # Each entry is (device_name, stream_name, extraction_function)
 # where extraction_function can select a subset of the stream columns.
 device_streams_for_features = [
     ('eye-gaze', 'gaze', lambda data: data),
-    # # ('eye-gaze', 'worn', lambda data: data),
-    ('armband-gforce-lowerarm', 'pressure_values_N_cm2', lambda data: data),
-    ('armband-gforce-upperarm', 'pressure_values_N_cm2', lambda data: data),
-    ('EMG-DominantLeg-cognionics', 'emg-values', lambda data: data),
-    ('insole-moticon-left-pressure', 'pressure_values_N_cm2', lambda data: data),
-    ('insole-moticon-right-pressure', 'pressure_values_N_cm2', lambda data: data),
-    ('insole-moticon-cop', 'cop', lambda data: data),
-    ('pns-joint-euler', 'angle-values', lambda data: data),
-    # ('pns-joint-angular-velocity', 'velocity-values', lambda data: data),
-    # ('pns-joint-local-position', 'cm-values', lambda data: data),
+    ('gforce-lowerarm-emg', 'emg-values', lambda data: data),
+    ('gforce-upperarm-emg', 'emg-values', lambda data: data),
+    ('cgx-aim-leg-emg', 'emg-values', lambda data: data),
+    ('moticon-insole', 'left-pressure', lambda data: data),
+    ('moticon-insole', 'right-pressure', lambda data: data),
+    ('moticon-insole', 'cop', lambda data: data),
+    ('pns-joint', 'Euler-angle', lambda data: data),
 ]
 
 # Specify the input data.
-data_root_dir = os.path.join(script_dir, 'data_archive')
+data_root_dir = os.path.join(script_dir, 'Data_Archive')
 
 data_folders_bySubject = OrderedDict([
-    ('S04', os.path.join(data_root_dir, 'S04')),
-    ('S05_2', os.path.join(data_root_dir, 'S05_2')),
-    ('S06_2', os.path.join(data_root_dir, 'S06_2')),
-    ('S07', os.path.join(data_root_dir, 'S07')),
-    ('S08', os.path.join(data_root_dir, 'S08')),
-    # ('S09', os.path.join(data_root_dir, 'S09')),
-    # ('S10', os.path.join(data_root_dir, 'S10')),
-    ('S11_2', os.path.join(data_root_dir, 'S11_2')),
-    # ('S12', os.path.join(data_root_dir, 'S12')),
-    ('S13', os.path.join(data_root_dir, 'S13')),
-    ('S14', os.path.join(data_root_dir, 'S14')),
-    ('S15', os.path.join(data_root_dir, 'S15')),
-    # ('S16', os.path.join(data_root_dir, 'S16')),
-    ('S17', os.path.join(data_root_dir, 'S17')),
-    ('S18', os.path.join(data_root_dir, 'S18')),
-    ('S19', os.path.join(data_root_dir, 'S19')),
-    ('S20', os.path.join(data_root_dir, 'S20')),
-    ('S21', os.path.join(data_root_dir, 'S21')),
-    ('S22', os.path.join(data_root_dir, 'S22')),
-    ('S23', os.path.join(data_root_dir, 'S23')),
-    ('S24', os.path.join(data_root_dir, 'S24')),
-    ('S25', os.path.join(data_root_dir, 'S25')),
-    ('S26', os.path.join(data_root_dir, 'S26')),
-    ('S27', os.path.join(data_root_dir, 'S27')),
-    ('S28', os.path.join(data_root_dir, 'S28')),
+    ('Sub00', os.path.join(data_root_dir, 'Sub00')),
+    ('Sub01', os.path.join(data_root_dir, 'Sub01')),
+    ('Sub02', os.path.join(data_root_dir, 'Sub02')),
+    ('Sub03', os.path.join(data_root_dir, 'Sub03')),
+    ('Sub04', os.path.join(data_root_dir, 'Sub04')),
+    # ('Sub05', os.path.join(data_root_dir, 'Sub05')),
+    # ('Sub06', os.path.join(data_root_dir, 'Sub05')),
+    ('Sub07', os.path.join(data_root_dir, 'Sub07')),
+    # ('Sub08', os.path.join(data_root_dir, 'Sub08')),
+    ('Sub09', os.path.join(data_root_dir, 'Sub09')),
+    ('Sub10', os.path.join(data_root_dir, 'Sub10')),
+    ('Sub11', os.path.join(data_root_dir, 'Sub11')),
+    # ('Sub12', os.path.join(data_root_dir, 'Sub12')),
+    ('Sub13', os.path.join(data_root_dir, 'Sub13')),
+    ('Sub14', os.path.join(data_root_dir, 'Sub14')),
+    ('Sub15', os.path.join(data_root_dir, 'Sub15')),
+    ('Sub16', os.path.join(data_root_dir, 'Sub16')),
+    ('Sub17', os.path.join(data_root_dir, 'Sub17')),
+    ('Sub18', os.path.join(data_root_dir, 'Sub18')),
+    ('Sub19', os.path.join(data_root_dir, 'Sub19')),
+    ('Sub20', os.path.join(data_root_dir, 'Sub20')),
+    ('Sub21', os.path.join(data_root_dir, 'Sub21')),
+    ('Sub22', os.path.join(data_root_dir, 'Sub22')),
+    ('Sub23', os.path.join(data_root_dir, 'Sub23')),
+    ('Sub24', os.path.join(data_root_dir, 'Sub24')),
 ])
 
 # Specify the labels to include.  These should match the labels in the HDF5 files.
 baseline_label = 'None'
-activities_to_classify = [ # Total Number is 3
+activities_to_classify = [  # Total Number is 3
     baseline_label,
     'Overhead Clear',
     'Backhand Driving',
@@ -85,14 +82,14 @@ baseline_index = activities_to_classify.index(baseline_label)
 # Some older experiments may have had different labels.
 #  Each entry below maps the new name to a list of possible old names.
 activities_renamed = {
-    'Overhead Clear': ['Overhead Clear'],
+    'Overhead Clear': ['Forehand Clear'], # Change name to Forehand clear
     'Backhand Driving': ['Backhand Driving'],
 }
 
-#Define segmentation parameters.
+# Define segmentation parameters.
 resampled_Fs = 60  # define a resampling rate for all sensors to interpolate
-num_segments_per_subject = 150
-num_baseline_segments_per_subject = 150  # num_segments_per_subject*(max(1, len(activities_to_classify)-1))
+num_segments_per_subject = 10
+num_baseline_segments_per_subject = 10  # num_segments_per_subject*(max(1, len(activities_to_classify)-1))
 segment_duration_s = 2.5
 segment_length = int(round(resampled_Fs * segment_duration_s))
 buffer_startActivity_s = 0.01
@@ -103,8 +100,6 @@ filter_cutoff_emg_Hz = 15
 filter_cutoff_emg_cognionics_Hz = 20
 filter_cutoff_pressure_Hz = 10
 filter_cutoff_gaze_Hz = 10
-num_tactile_rows_aggregated = 4
-num_tactile_cols_aggregated = 4
 
 # Make the output folder if needed.
 if output_dir is not None:
@@ -127,7 +122,7 @@ def lowpass_filter(data, cutoff, Fs, order=4):
     return y
 
 def convert_to_nan(arr, difff, time):
-    for i in range(len(arr)-time):
+    for i in range(len(arr) - time):
         for j in range(len(arr[0])):
             diff = abs(arr[i, j] - arr[i + time, j])
             if diff > difff:
@@ -144,8 +139,6 @@ for (subject_id, data_folder) in data_folders_bySubject.items():
     data_bySubject[subject_id] = []
     hdf_filepaths = glob.glob(os.path.join(data_folder, '**/*.hdf5'), recursive=True)
     for hdf_filepath in hdf_filepaths:
-        if 'archived' in hdf_filepath:
-            continue
         data_bySubject[subject_id].append({})
         hdf_file = h5py.File(hdf_filepath, 'r')
         print(hdf_filepath)
@@ -182,7 +175,7 @@ for (subject_id, data_folder) in data_folders_bySubject.items():
         hdf_file.close()
 
 # print(data_bySubject)
-#Filter data.
+# Filter data.
 print()
 for (subject_id, file_datas) in data_bySubject.items():
     print('Filtering data for subject %s' % subject_id)
@@ -190,12 +183,12 @@ for (subject_id, file_datas) in data_bySubject.items():
         # print('file_data : ', file_data)
         print(' Data file index', data_file_index)
         # Filter EMG data.
-        for gforce_key in ['armband-gforce-lowerarm', 'armband-gforce-upperarm']:
+        for gforce_key in ['gforce-lowerarm-emg', 'gforce-upperarm-emg']:
             if gforce_key in file_data:
-                t = file_data[gforce_key]['pressure_values_N_cm2']['time_s']
+                t = file_data[gforce_key]['emg-values']['time_s']
                 Fs = (t.size - 1) / (t[-1] - t[0])
                 print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % (gforce_key, Fs, filter_cutoff_emg_Hz))
-                data_stream = file_data[gforce_key]['pressure_values_N_cm2']['data'][:, :]
+                data_stream = file_data[gforce_key]['emg-values']['data'][:, :]
                 y = np.abs(data_stream)
                 y = lowpass_filter(y, filter_cutoff_emg_Hz, Fs)
                 # for i in range(len(data_stream[0])):
@@ -210,12 +203,13 @@ for (subject_id, file_datas) in data_bySubject.items():
                 #
                 #     plt.show()
                 #     plt.clf()
-                file_data[gforce_key]['pressure_values_N_cm2']['data'] = y
-        for cognionics_key in ['EMG-DominantLeg-cognionics']:
+                file_data[gforce_key]['emg-values']['data'] = y
+        for cognionics_key in ['cgx-aim-leg-emg']:
             if cognionics_key in file_data:
                 t = file_data[cognionics_key]['emg-values']['time_s']
                 Fs = (t.size - 1) / (t[-1] - t[0])
-                print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % (cognionics_key, Fs, filter_cutoff_emg_cognionics_Hz))
+                print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % (
+                cognionics_key, Fs, filter_cutoff_emg_cognionics_Hz))
                 data_stream = file_data[cognionics_key]['emg-values']['data'][:, :]
                 data_stream = np.abs(data_stream)
                 # Correcting the bounce value
@@ -287,35 +281,19 @@ for (subject_id, file_datas) in data_bySubject.items():
             #     plt.show()
             #     plt.clf()
             file_data['eye-gaze']['gaze']['data'] = y
-        for moticon_key in ['insole-moticon-left-pressure', 'insole-moticon-right-pressure']:
+        for moticon_key in ['left-pressure', 'right-pressure', 'cop']:
             if moticon_key in file_data:
-                t = file_data[moticon_key]['pressure_values_N_cm2']['time_s']
+                t = file_data['moticon-insole'][moticon_key]['time_s']
                 Fs = (t.size - 1) / (t[-1] - t[0])
-                print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % (moticon_key, Fs, filter_cutoff_pressure_Hz))
-                data_stream = file_data[moticon_key]['pressure_values_N_cm2']['data'][:, :]
+                print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % ('moticon-insole', Fs, filter_cutoff_pressure_Hz))
+                data_stream = file_data['moticon-insole'][moticon_key]['data'][:, :]
                 y = np.abs(data_stream)
                 y = lowpass_filter(y, filter_cutoff_pressure_Hz, Fs)
                 # plt.plot(t-t[0], data_stream[:,0], label=moticon_key+'_raw')
                 # plt.plot(t-t[0], y[:,0], label=moticon_key+'_preprocessed')
                 # plt.legend()
                 # plt.show()
-                file_data[moticon_key]['pressure_values_N_cm2']['data'] = y
-        if 'insole-moticon-cop' in file_data:
-            t = file_data['insole-moticon-cop']['cop']['time_s']
-            Fs = (t.size - 1) / (t[-1] - t[0])
-
-            data_stream = file_data['insole-moticon-cop']['cop']['data'][:, :]
-            y = data_stream
-
-            # Filter to smooth.
-            print('   Filtering %s with Fs %0.1f Hz to cutoff %f' % ('insole-moticon-cop', Fs, filter_cutoff_pressure_Hz))
-            y = lowpass_filter(y, filter_cutoff_pressure_Hz, Fs)
-            # plt.plot(t - t[0], data_stream[:, 0], label='insole-moticon-cop'+'_raw')
-            # plt.plot(t-t[0], y[:,0], label='insole-moticon-cop'+'_preprocessed')
-            # # plt.ylim(-2,2)
-            # plt.legend()
-            # plt.show()
-            file_data['insole-moticon-cop']['cop']['data'] = y
+                file_data['moticon-insole'][moticon_key]['data'] = y
         data_bySubject[subject_id][data_file_index] = file_data
 
 # Normalize data.
@@ -324,35 +302,26 @@ for (subject_id, file_datas) in data_bySubject.items():
     print('Normalizing data for subject %s' % subject_id)
     for (data_file_index, file_data) in enumerate(file_datas):
         # Normalize gForce Pro EMG data.
-        for gforce_key in ['armband-gforce-lowerarm', 'armband-gforce-upperarm']:
+        for gforce_key in ['gforce-lowerarm-emg', 'gforce-upperarm-emg']:
             if gforce_key in file_data:
-                data_stream = file_data[gforce_key]['pressure_values_N_cm2']['data'][:, :]
+                data_stream = file_data[gforce_key]['emg-values']['data'][:, :]
                 y = data_stream
                 print(' Normalizing %s with min/max [%0.1f, %0.1f]' % (gforce_key, np.amin(y), np.amax(y)))
                 # Normalize them jointly.
                 y = y / ((np.amax(y) - np.amin(y)) / 2)
                 # Jointly shift the baseline to -1 instead of 0.
                 y = y - np.amin(y) - 1
-                file_data[gforce_key]['pressure_values_N_cm2']['data'] = y
+                file_data[gforce_key]['emg-values']['data'] = y
                 print('   Now has range [%0.1f, %0.1f]' % (np.amin(y), np.amax(y)))
                 # plt.plot(y.reshape(y.shape[0], -1))
                 # plt.show()
 
         # Normalize Cognionics EMG data.
-        for cognionics_key in ['EMG-DominantLeg-cognionics']:
+        for cognionics_key in ['cgx-aim-leg-emg']:
             if cognionics_key in file_data:
                 data_stream = file_data[cognionics_key]['emg-values']['data'][:, :]
                 y = data_stream
                 print(' Normalizing %s with min/max [%0.1f, %0.1f]' % (cognionics_key, np.amin(y), np.amax(y)))
-                # Normalize them jointly.
-                # y[:, 0] = y[:, 0] / ((np.amax(y[:, 0]) - np.amin(y[:, 0])) / 2)
-                # y[:, 1] = y[:, 1] / ((np.amax(y[:, 1]) - np.amin(y[:, 1])) / 2)
-                # y[:, 2] = y[:, 2] / ((np.amax(y[:, 2]) - np.amin(y[:, 2])) / 2)
-                # y[:, 3] = y[:, 3] / ((np.amax(y[:, 3]) - np.amin(y[:, 3])) / 2)
-                # y[:, 0] = y[:, 0] - np.amin(y[:, 0]) - 1
-                # y[:, 1] = y[:, 1] - np.amin(y[:, 1]) - 1
-                # y[:, 2] = y[:, 2] - np.amin(y[:, 2]) - 1
-                # y[:, 3] = y[:, 3] - np.amin(y[:, 3]) - 1
                 y = y / ((np.amax(y) - np.amin(y)) / 2)
                 # Jointly shift the baseline to -1 instead of 0.
                 y = y - np.amin(y) - 1
@@ -363,7 +332,7 @@ for (subject_id, file_datas) in data_bySubject.items():
 
         # Normalize Perception Neuron Studio joints.
         if 'pns-joint-euler' in file_data:
-            data_stream = file_data['pns-joint-euler']['angle-values']['data'][:, :]
+            data_stream = file_data['pns-joint']['Euler-angle']['data'][:, :]
             y = data_stream
             min_val = -180
             max_val = 180
@@ -371,39 +340,7 @@ for (subject_id, file_datas) in data_bySubject.items():
             # Normalize all at once since using fixed bounds anyway.
             # Preserve relative bends, such as left arm being bent more than the right.
             y = y / ((max_val - min_val) / 2)
-            # for i in range(20):
-            #   plt.plot(y[:,i])
-            #   plt.ylim(-1,1)
-            #   plt.show()
-            file_data['pns-joint-euler']['angle-values']['data'] = y
-            print('   Now has range [%0.1f, %0.1f]' % (np.amin(y), np.amax(y)))
-            # plt.plot(y.reshape(y.shape[0], -1))
-            # plt.show()
-
-        if 'pns-joint-local-position' in file_data:
-            data_stream = file_data['pns-joint-local-position']['cm-values']['data'][:, :]
-            y = data_stream
-            print(' Normalizing %s with min/max [%0.1f, %0.1f]' % ('pns-joint-local-position', np.amin(y), np.amax(y)))
-            # Normalize them jointly.
-            y = y / ((np.amax(y) - np.amin(y)) / 2)
-            # Jointly shift the baseline to -1 instead of 0.
-            y = y - np.amin(y) - 1
-            file_data['pns-joint-local-position']['cm-values']['data'] = y
-            print('   Now has range [%0.1f, %0.1f]' % (np.amin(y), np.amax(y)))
-            # plt.plot(y.reshape(y.shape[0], -1))
-            # plt.show()
-
-        if 'pns-joint-angular-velocity' in file_data:
-            data_stream = file_data['pns-joint-angular-velocity']['velocity-values']['data'][:, :]
-            y = data_stream
-            print(' Normalizing %s with min/max [%0.1f, %0.1f]' % ('pns-joint-angular-velocity', np.amin(y), np.amax(y)))
-
-            min_val = -1000.0
-            max_val = 1000.0
-
-            # Normalize them jointly.
-            y = y / ((max_val - min_val) / 2)
-            file_data['pns-joint-angular-velocity']['velocity-values']['data'] = y
+            file_data['pns-joint']['Euler-angle']['data'] = y
             print('   Now has range [%0.1f, %0.1f]' % (np.amin(y), np.amax(y)))
             # plt.plot(y.reshape(y.shape[0], -1))
             # plt.show()
@@ -418,7 +355,8 @@ for (subject_id, file_datas) in data_bySubject.items():
             min_y = 0
             max_y = 1080
 
-            print(' Normalizing %s with min/max [%0.1f, %0.1f] and min/max [%0.1f, %0.1f]' % ('eye-gaze', min_x, max_x, min_y, max_y))
+            print(' Normalizing %s with min/max [%0.1f, %0.1f] and min/max [%0.1f, %0.1f]' % (
+            'eye-gaze', min_x, max_x, min_y, max_y))
             # # The gaze position is already normalized to video coordinates,
             # #  so anything outside [0,1] is outside the video.
             clip_low = -0.95
@@ -441,44 +379,19 @@ for (subject_id, file_datas) in data_bySubject.items():
             # plt.show()
 
         # Normalize Moticon Pressure.
-        for moticon_key in ['insole-moticon-left-pressure', 'insole-moticon-right-pressure']:
+        for moticon_key in ['left-pressure', 'right-pressure', 'cop']:
             if moticon_key in file_data:
-                data_stream = file_data[moticon_key]['pressure_values_N_cm2']['data'][:, :]
+                data_stream = file_data['moticon-insole'][moticon_key]['data'][:, :]
                 y = data_stream
-                print(' Normalizing %s with min/max [%0.1f, %0.1f]' % (moticon_key, np.amin(y), np.amax(y)))
+                print(' Normalizing %s with min/max [%0.1f, %0.1f]' % ('moticon-insole', np.amin(y), np.amax(y)))
                 # Normalize them jointly.
                 y = y / ((np.amax(y) - np.amin(y)) / 2)
                 # Jointly shift the baseline to -1 instead of 0.
                 y = y - np.amin(y) - 1
-                file_data[moticon_key]['pressure_values_N_cm2']['data'] = y
+                file_data['moticon-insole'][moticon_key]['data'] = y
                 print('   Now has range [%0.1f, %0.1f]' % (np.amin(y), np.amax(y)))
                 # plt.plot(y.reshape(y.shape[0], -1))
                 # plt.show()
-
-        if 'insole-moticon-cop' in file_data:
-            data_stream = file_data['insole-moticon-cop']['cop']['data'][:]
-            t = file_data['insole-moticon-cop']['cop']['time_s'][:]
-            y = data_stream
-            min_x = -0.5
-            max_x = 0.5
-            min_y = -0.574
-            max_y = 0.426
-
-            print(' Normalizing %s with min/max [%0.1f, %0.1f] and min/max [%0.1f, %0.1f]' % ('insole-moticon-cop', min_x, max_x, min_y, max_y))
-
-            # Normalize them jointly.
-            y[:, 0] = y[:, 0] / ((max_x - min_x) / 2)
-            y[:, 1] = y[:, 1] / ((max_y - min_y) / 2)
-            # Jointly shift the baseline to -1 instead of 0.
-            y = y - min_y - 1
-            # y = (y - np.mean([clip_low, clip_high])) / ((clip_high - clip_low) / 2)
-            # print(' Clipping %s to [%0.1f, %0.1f]' % ('eye-gaze', clip_low, clip_high))
-            # plt.plot(t-t[0], y)
-            # plt.show()
-            file_data['insole-moticon-cop']['cop']['data'] = y
-            print('   Now has range [%0.1f, %0.1f]' % (np.amin(y), np.amax(y)))
-            # plt.plot(y.reshape(y.shape[0], -1))
-            # plt.show()
 
         data_bySubject[subject_id][data_file_index] = file_data
 
@@ -488,29 +401,25 @@ for (subject_id, file_datas) in data_bySubject.items():
     print('Aggregating data for subject %s' % subject_id)
     for (data_file_index, file_data) in enumerate(file_datas):
         # Aggregate EMG data.
-        for gforce_key in ['armband-gforce-lowerarm', 'armband-gforce-upperarm']:
+        for gforce_key in ['gforce-lowerarm-emg', 'gforce-upperarm-emg']:
             if gforce_key in file_data:
                 pass
 
         # Aggregate eye-tracking gaze.
-        if 'EMG-DominantLeg-cognionics' in file_data:
+        if 'cgx-aim-leg-emg' in file_data:
             pass
 
         # Aggregate Perception Nueron Studio joints.
-        if 'pns-joint-euler' in file_data:
-            pass
-        if 'pns-joint-local-position' in file_data:
-            pass
-        if 'pns-joint-angular-velocity' in file_data:
-            pass
-        # Aggregate eye-tracking gaze.
-        if 'eye-tracking-gaze' in file_data:
+        if 'pns-joint' in file_data:
             pass
 
         # Aggregate eye-tracking gaze.
-        for moticon_key in ['insole-moticon-left-pressure', 'insole-moticon-right-pressure', 'insole-moticon-cop']:
-            if moticon_key in file_data:
-                pass
+        if 'eye-gaze' in file_data:
+            pass
+
+        # Aggregate eye-tracking gaze.
+        if 'moticon-insole' in file_data:
+            pass
 
         data_bySubject[subject_id][data_file_index] = file_data
 
@@ -550,6 +459,7 @@ for (subject_id, file_datas) in data_bySubject.items():
             file_data[device_name][stream_name]['data'] = data_resampled
         data_bySubject[subject_id][data_file_index] = file_data
 
+
 #########################################
 ############ CREATE FEATURES ############
 #########################################
@@ -577,7 +487,7 @@ def get_feature_matrices(experiment_data, label_start_time_s, label_end_time_s, 
             time_indexes = list(time_indexes)
             while len(time_indexes) < segment_length:
                 print(' Increasing segment length from %d to %d for %s %s for segment starting at %f' % (
-                len(time_indexes), segment_length, device_name, stream_name, segment_start_time_s))
+                    len(time_indexes), segment_length, device_name, stream_name, segment_start_time_s))
                 if time_indexes[0] > 0:
                     time_indexes = [time_indexes[0] - 1] + time_indexes
                 elif time_indexes[-1] < len(time_s) - 1:
@@ -586,7 +496,7 @@ def get_feature_matrices(experiment_data, label_start_time_s, label_end_time_s, 
                     raise AssertionError
             while len(time_indexes) > segment_length:
                 print(' Decreasing segment length from %d to %d for %s %s for segment starting at %f' % (
-                len(time_indexes), segment_length, device_name, stream_name, segment_start_time_s))
+                    len(time_indexes), segment_length, device_name, stream_name, segment_start_time_s))
                 time_indexes.pop()
             time_indexes = np.array(time_indexes)
 
@@ -614,6 +524,7 @@ def get_feature_matrices(experiment_data, label_start_time_s, label_end_time_s, 
         feature_matrices.append(feature_matrix)
     # print(len(feature_matrices), feature_matrices[0].shape)
     return feature_matrices
+
 
 #########################################
 ############ CREATE EXAMPLES ############
@@ -696,7 +607,7 @@ for (subject_id, file_datas) in data_bySubject.items():
                     #   num_examples = num_segments_per_subject - num_examples*(len(file_label_indexes)-1)
                     num_examples = num_segments_per_subject
                     print('  Extracting %d examples from activity "%s" with duration %0.2fs' % (
-                    num_examples, activity_label, duration_s))
+                        num_examples, activity_label, duration_s))
                     # print('file data : ', file_data)
                     feature_matrices = get_feature_matrices(file_data,
                                                             start_time_s, end_time_s,
@@ -731,7 +642,7 @@ for (subject_id, file_datas) in data_bySubject.items():
         if activity_label_index == baseline_index:
             continue
         print(' Selecting %d examples for subject %s of activity "%s"' % (
-        num_segments_per_subject, subject_id, activity_label))
+            num_segments_per_subject, subject_id, activity_label))
         if activity_label not in example_matrices_byLabel:
             print('\n' * 5)
             print('=' * 50)
@@ -754,7 +665,7 @@ for (subject_id, file_datas) in data_bySubject.items():
 
     # Choose a subset of the baseline examples.
     print(' Selecting %d examples for subject %s of activity "%s"' % (
-    num_baseline_segments_per_subject, subject_id, baseline_label))
+        num_baseline_segments_per_subject, subject_id, baseline_label))
     noActivity_indexes = np.round(np.linspace(0, len(noActivity_matrices) - 1,
                                               endpoint=True,
                                               num=num_baseline_segments_per_subject,
