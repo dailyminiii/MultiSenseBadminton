@@ -183,14 +183,10 @@ class Visualizer(QWidget):
         ]
 
         self._segment_chains_labels_toPlot = {
-            # 'Left Legs': ['Spine', 'Left UpLeg', 'Left Leg', 'Left Foot'],
-            # 'Right Legs': ['Spine', 'Right UpLeg', 'Right Leg', 'Right Foot'],
+
             'Left Legs': ['Hips', 'Left UpLeg', 'Left Leg', 'Left Foot'],
             'Right Legs': ['Hips', 'Right UpLeg', 'Right Leg', 'Right Foot'],
-            # 'Spines': ['Head', 'Neck1', 'Neck1', 'Spine2', 'Spine1', 'Spine', ],
             'Spines': ['Head', 'Neck1', 'Neck1', 'Spine2', 'Spine1', 'Spine', 'Hips', ],
-            # , 'Spine', 'Hips'],  # top down
-            # 'Hips': ['Left UpLeg', 'Hips', 'Right UpLeg'],
             'Shoulders': ['Left Shoulder', 'Neck', 'Right Shoulder'],
             'Left Arms': ['Left Shoulder', 'Left Arm', 'Left ForeArm', 'Left Hand'],
             'Right Arms': ['Right Shoulder', 'Right Arm', 'Right ForeArm', 'Right Hand'],
@@ -560,7 +556,7 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            EMG = f['EMG-DominantLeg-cognionics']
+            EMG = f['cgx-aim-leg-emg']
             EMG_data = EMG['emg-values']['time_str']
 
             data_index_start = timeSearch(EMG_data, time1)
@@ -632,7 +628,7 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            EMG = f['EMG-DominantLeg-cognionics']
+            EMG = f['cgx-aim-leg-emg']
             EMG_data = EMG['emg-values']['time_str']
 
             data_index_start = timeSearch(EMG_data, time1)
@@ -718,13 +714,13 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            EMG = f['armband-gforce-upperarm']
-            EMG_data = EMG['pressure_values_N_cm2']['time_str']
+            EMG = f['gforce-upperarm-emg']
+            EMG_data = EMG['emg-values']['time_str']
 
             data_index_start = timeSearch(EMG_data, time1)
             data_index_stop = timeSearch(EMG_data, time2)
 
-            searched_data = EMG['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
+            searched_data = EMG['emg-values']['data'][data_index_start:data_index_stop]
             print(time1, time2)
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
@@ -813,13 +809,13 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            EMG = f['armband-gforce-upperarm']
-            EMG_data = EMG['pressure_values_N_cm2']['time_str']
+            EMG = f['gforce-upperarm-emg']
+            EMG_data = EMG['emg-values']['time_str']
 
             data_index_start = timeSearch(EMG_data, time1)
             data_index_stop = timeSearch(EMG_data, time2)
 
-            searched_data = EMG['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
+            searched_data = EMG['emg-values']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
@@ -921,13 +917,13 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            EMG = f['armband-gforce-lowerarm']
-            EMG_data = EMG['pressure_values_N_cm2']['time_str']
+            EMG = f['gforce-lowerarm-emg']
+            EMG_data = EMG['emg-values']['time_str']
 
             data_index_start = timeSearch(EMG_data, time1)
             data_index_stop = timeSearch(EMG_data, time2)
 
-            searched_data = EMG['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
+            searched_data = EMG['emg-values']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
@@ -1015,13 +1011,13 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            EMG = f['armband-gforce-lowerarm']
-            EMG_data = EMG['pressure_values_N_cm2']['time_str']
+            EMG = f['gforce-lowerarm-emg']
+            EMG_data = EMG['emg-values']['time_str']
 
             data_index_start = timeSearch(EMG_data, time1)
             data_index_stop = timeSearch(EMG_data, time2)
 
-            searched_data = EMG['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
+            searched_data = EMG['emg-values']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
@@ -1255,15 +1251,15 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            Insole_left = f['insole-moticon-left-pressure']
-            Insole_right = f['insole-moticon-right-pressure']
-            Insole_data = Insole_left['pressure_values_N_cm2']['time_str']
+            Insole_left = f['moticon-insole']
+            Insole_right = f['moticon-insole']
+            Insole_data = Insole_left['left-pressure']['time_str']
 
             data_index_start = timeSearch(Insole_data, time1)
             data_index_stop = timeSearch(Insole_data, time2)
 
-            searched_data_left = Insole_left['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
-            searched_data_right = Insole_right['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
+            searched_data_left = Insole_left['left-pressure']['data'][data_index_start:data_index_stop]
+            searched_data_right = Insole_right['right-pressure']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
@@ -1314,15 +1310,15 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            Insole_left = f['insole-moticon-left-pressure']
-            Insole_right = f['insole-moticon-right-pressure']
-            Insole_data = Insole_left['pressure_values_N_cm2']['time_str']
+            Insole_left = f['moticon-insole']
+            Insole_right = f['moticon-insole']
+            Insole_data = Insole_left['left-pressure']['time_str']
 
             data_index_start = timeSearch(Insole_data, time1)
             data_index_stop = timeSearch(Insole_data, time2)
 
-            searched_data_left = Insole_left['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
-            searched_data_right = Insole_right['pressure_values_N_cm2']['data'][data_index_start:data_index_stop]
+            searched_data_left = Insole_left['left-pressure']['data'][data_index_start:data_index_stop]
+            searched_data_right = Insole_right['right-pressure']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
@@ -1387,13 +1383,13 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            PNS = f['pns-joint-position']
-            position_data = PNS['cm-values']['time_str']
+            PNS = f['pns-joint']
+            position_data = PNS['global-position']['time_str']
 
             data_index_start = timeSearch(position_data, time1)
             data_index_stop = timeSearch(position_data, time2)
 
-            searched_data = PNS['cm-values']['data'][data_index_start:data_index_stop]
+            searched_data = PNS['global-position']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
@@ -1454,13 +1450,13 @@ class Visualizer(QWidget):
             time1 = data[index_start]
             time2 = data[index_start + 1]
 
-            PNS = f['pns-joint-position']
-            position_data = PNS['cm-values']['time_str']
+            PNS = f['pns-joint']
+            position_data = PNS['global-position']['time_str']
 
             data_index_start = timeSearch(position_data, time1)
             data_index_stop = timeSearch(position_data, time2)
 
-            searched_data = PNS['cm-values']['data'][data_index_start:data_index_stop]
+            searched_data = PNS['global-position']['data'][data_index_start:data_index_stop]
             date_format = "%Y-%m-%d %H:%M:%S.%f"
             date1 = datetime.strptime(time2[0].decode('utf-8'), date_format)
             date2 = datetime.strptime(time1[0].decode('utf-8'), date_format)
