@@ -19,7 +19,7 @@ While badminton performance relies heavily on the success of each stroke, there 
 
 ## Data Annotation
 
-![Data Annotation](https://user-images.githubusercontent.com/79134282/233352940-9f69c707-3154-4b1d-895c-544ca3766143.jpg)
+![Annotation Level](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/b3b6351a-8048-4b62-bddb-960eb698129d)
 
 ## Data Preprocessing
 
