@@ -50,9 +50,8 @@ For leg EMG:
 
 Leg Force Motion
 Squat Motion
-The purpose of calibration was to extract the maximum EMG value from the recorded data. The calibration data allows for proper normalization and calibration of subsequent EMG measurements.
 
-For further instructions on utilizing the calibration data and extracting the maximum EMG values, please refer to the GitHub readme file associated with the dataset.
+The purpose of calibration was to extract the maximum EMG value from the recorded data. The calibration data allows for proper normalization and calibration of subsequent EMG measurements.
 
 **4) Eye-gaze**
 
