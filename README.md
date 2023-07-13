@@ -31,7 +31,28 @@ The third channel indicates whether the corresponding data is saved or blank. "S
 
 **3) experiment-calibration**
 
-This dataset indicates the start and stop times for calibration.
+The calibration data consists of three channels and is specific to gforce and leg EMG. The details of the calibration dataset are as follows:
+
+The calibration dataset has three channels:
+
+1) Start/Stop Status: This channel indicates the start and stop status of the calibration process.
+2) Calibration Data Storage: The second channel indicates whether the calibration data has been stored properly. If the calibration data is saved correctly, it is marked as "Good". Otherwise, it is left blank.
+3) Calibration Type: The third channel specifies the type of calibration performed.
+Calibration was conducted for two types of data: gforce and leg EMG. The calibration process involved performing a total of three motions for gforce and two motions for leg EMG. The motions performed are as follows:
+
+For gforce:
+
+Lower Arm Inward Motion
+Lower Arm Outward Motion
+Upper Arm Inward Motion
+
+For leg EMG:
+
+Leg Force Motion
+Squat Motion
+The purpose of calibration was to extract the maximum EMG value from the recorded data. The calibration data allows for proper normalization and calibration of subsequent EMG measurements.
+
+For further instructions on utilizing the calibration data and extracting the maximum EMG values, please refer to the GitHub readme file associated with the dataset.
 
 **4) Eye-gaze**
 
