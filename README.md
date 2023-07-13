@@ -17,32 +17,34 @@ The sports industry is witnessing an increasing trend of utilizing multiple sync
 
 The sensor data is stored in HDF5 format for each subject, with each dataset containing specific information. The details of the datasets are as follows:
 
-cgx-aim-leg-emg: This dataset contains electromyography (EMG) values for the dominant leg, measured in millivolts (mV). It consists of four channels, and each channel represents specific muscle information. For detailed muscle descriptions, please refer to the accompanying paper.
+**cgx-aim-leg-emg**: This dataset contains electromyography (EMG) values for the dominant leg, measured in millivolts (mV). It consists of four channels, and each channel represents specific muscle information. For detailed muscle descriptions, please refer to the accompanying paper.
 
-experiment-activities: This dataset records the start and end times of each motion activity. It has three channels:
+**experiment-activities**: This dataset records the start and end times of each motion activity. It has three channels:
 
 The first channel indicates the stroke type.
 The second channel indicates whether the motion has started or stopped.
 The third channel indicates whether the corresponding data is saved or blank. "Saved" indicates that the stroke data is correctly captured, while "blank" indicates the absence of stroke data.
 experiment-calibration: This dataset indicates the start and stop times for calibration.
 
-Eye-gaze: This dataset captures eye-tracking data using pupil invisible glasses. It consists of two channels:
+**Eye-gaze**: This dataset captures eye-tracking data using pupil invisible glasses. It consists of two channels:
 
 The first channel represents the X-value of gaze positions, ranging from 0 to 1088.
 The second channel represents the Y-value of gaze positions, ranging from 0 to 1080.
 Additionally, the dataset includes a "worn" column which indicates whether the corresponding data was predicted while wearing glasses. The value 1 represents wearing glasses, while 0 represents not wearing glasses.
-gforce-lowerarm-emg: This dataset provides EMG values for the lower arm, measured in normalized units ranging from 0 to 250. It contains data for eight channels.
 
-gforce-upperarm-emg: Similar to the previous dataset, this dataset contains EMG values for the upper arm. It also consists of eight channels, and the data is normalized between 0 and 250.
+**gforce-lowerarm-emg**: This dataset provides EMG values for the lower arm, measured in normalized units ranging from 0 to 250. It contains data for eight channels.
 
-moticon-insole: This dataset contains multiple types of data, including:
+**gforce-upperarm-emg**: Similar to the previous dataset, this dataset contains EMG values for the upper arm. It also consists of eight channels, and the data is normalized between 0 and 250.
+
+**moticon-insole**: This dataset contains multiple types of data, including:
 
 Center of Pressure (COP): It consists of four channels representing the x and y coordinates of COP for the left and right foot.
 Acceleration: This data captures linear acceleration in the x, y, and z directions, measured in g (gravity).
 Angular Velocity: It records the angular velocity in the x, y, and z axes, measured in degrees per second.
 Pressure: The pressure data is measured in Newton per square centimeter (N/cm²).
 Total Force: It represents the total force and is reported in Newton (N) units.
-pns-joint: This dataset contains information related to joint positions, velocities, and angles. It includes the following parameters for each joint (total of 21 joints):
+
+**pns-joint**: This dataset contains information related to joint positions, velocities, and angles. It includes the following parameters for each joint (total of 21 joints):
 
 Local Position: The position of the joint in centimeters (cm).
 Global Position: The global position of the joint.
