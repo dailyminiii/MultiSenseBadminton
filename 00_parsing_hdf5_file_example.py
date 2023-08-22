@@ -33,7 +33,7 @@ from scipy import interpolate # for the resampling example
 #   It can also be downloaded without an account from https://www.softpedia.com/get/Others/Miscellaneous/HDFView.shtml.
 
 # Specify the downloaded file to parse.
-filepath = './Data_Archive/Sub00/2023-01-02_10-54-08_badminton-wearables_Sub00/2023-02-15_14-37-22_streamLog_badminton-wearables_Sub00.hdf5'
+filepath = './Data_Archive/Sub00/2023-01-02_10-54-08_streamLog_badminton-wearables_Sub00.hdf5'
 
 # Open the file.
 h5_file = h5py.File(filepath, 'r')

@@ -12,7 +12,7 @@ import tensorflow as tf
 from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras import backend as keras_backend
-import tensorflow_addons.metrics
+# import tensorflow_addons.metrics
 from sklearn import metrics
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -491,7 +491,7 @@ for sensor_subset in sensor_subsets:
                       # tf.keras.optimizers.SGD(learning_rate = 0.01, momentum = 0.0, nesterov = False),
                       loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
                       # from_logits is False since already outputting probabilities from the network (via softmax)
-                      metrics=['accuracy', tensorflow_addons.metrics.F1Score(num_classes=3, average='macro')],
+                      metrics=['accuracy'],
                       )
 
         # Visualize the model (will save model.png in the current folder).

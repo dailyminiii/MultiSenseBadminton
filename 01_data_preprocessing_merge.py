@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import pickle
 from collections import OrderedDict
 import os, glob
+import pandas as pd
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -21,7 +22,8 @@ from utils.time_utils import *
 
 # Define where outputs will be saved.
 output_dir = os.path.join(script_dir, 'data_processed')
-output_filepath = os.path.join(output_dir, 'data_processed_allStreams_60hz_21subj_allActs.hdf5')
+output_filepath = os.path.join(output_dir, 'data_processed_allStreams_60hz_21subj_allActs.hdf5') # output file name
+annotation_data_filePath = '../Badminton ActionNet/Data_Archive/Annotation Data File.xlsx' # directory of annotation data xlsx file
 # output_filepath = None
 
 # Define the modalities to use.
@@ -39,7 +41,8 @@ device_streams_for_features = [
 ]
 
 # Specify the input data.
-data_root_dir = os.path.join(script_dir, 'Data_Archive')
+# data_root_dir = os.path.join(script_dir, 'Data_Archive')
+data_root_dir = '../Badminton ActionNet/Data_Archive/'
 
 data_folders_bySubject = OrderedDict([
     ('Sub00', os.path.join(data_root_dir, 'Sub00')),
@@ -73,7 +76,7 @@ data_folders_bySubject = OrderedDict([
 baseline_label = 'None'
 activities_to_classify = [  # Total Number is 3
     baseline_label,
-    'Overhead Clear',
+    'Forehand Clear',
     'Backhand Driving',
 ]
 
@@ -81,7 +84,7 @@ baseline_index = activities_to_classify.index(baseline_label)
 # Some older experiments may have had different labels.
 #  Each entry below maps the new name to a list of possible old names.
 activities_renamed = {
-    'Overhead Clear': ['Forehand Clear'], # Change name to Forehand clear
+    'Forehand Clear': ['Forehand Clear'], # Change name to Forehand clear
     'Backhand Driving': ['Backhand Driving'],
 }
 
@@ -137,27 +140,27 @@ for (subject_id, data_folder) in data_folders_bySubject.items():
     print('Loading data for subject %s' % subject_id)
     data_bySubject[subject_id] = []
     hdf_filepaths = glob.glob(os.path.join(data_folder, '**/*.hdf5'), recursive=True)
+    print(hdf_filepaths)
     for hdf_filepath in hdf_filepaths:
         data_bySubject[subject_id].append({})
         hdf_file = h5py.File(hdf_filepath, 'r')
-        print(hdf_filepath)
         # Add the activity label information.
         have_all_streams = True
-        try:
-            device_name = 'experiment-activities'
-            stream_name = 'activities'
-            data_bySubject[subject_id][-1].setdefault(device_name, {})
-            data_bySubject[subject_id][-1][device_name].setdefault(stream_name, {})
-            for key in ['time_s', 'data']:
-                data_bySubject[subject_id][-1][device_name][stream_name][key] = hdf_file[device_name][stream_name][key][
-                                                                                :]
-            num_activity_entries = len(data_bySubject[subject_id][-1][device_name][stream_name]['time_s'])
-            if num_activity_entries == 0:
-                have_all_streams = False
-            elif data_bySubject[subject_id][-1][device_name][stream_name]['time_s'][0] == 0:
-                have_all_streams = False
-        except KeyError:
-            have_all_streams = False
+        # try:
+        #     device_name = 'experiment-activities'
+        #     stream_name = 'activities'
+        #     data_bySubject[subject_id][-1].setdefault(device_name, {})
+        #     data_bySubject[subject_id][-1][device_name].setdefault(stream_name, {})
+        #     for key in ['time_s', 'data']:
+        #         data_bySubject[subject_id][-1][device_name][stream_name][key] = hdf_file[device_name][stream_name][key][
+        #                                                                         :]
+        #     num_activity_entries = len(data_bySubject[subject_id][-1][device_name][stream_name]['time_s'])
+        #     if num_activity_entries == 0:
+        #         have_all_streams = False
+        #     elif data_bySubject[subject_id][-1][device_name][stream_name]['time_s'][0] == 0:
+        #         have_all_streams = False
+        # except KeyError:
+        #     have_all_streams = False
         # Load data for each of the streams that will be used as features.
         for (device_name, stream_name, _) in device_streams_for_features:
             data_bySubject[subject_id][-1].setdefault(device_name, {})
@@ -529,160 +532,189 @@ def get_feature_matrices(experiment_data, label_start_time_s, label_end_time_s, 
 ############ CREATE EXAMPLES ############
 #########################################
 
-# Will store intermediate examples from each file.
-example_matrices_byLabel = {}
-# Then will create the following 'final' lists with the correct number of examples.
 example_labels = []
 example_label_indexes = []
-example_matrices = []
+example_matrices_list = []
 example_subject_ids = []
-print()
+Forehand_time_list = []
+Backhand_time_list = []
+
+df = pd.read_excel(annotation_data_filePath)
+
 for (subject_id, file_datas) in data_bySubject.items():
-    print()
-    print('Processing data for subject %s' % subject_id)
-    noActivity_matrices = []
+    print('Resampling data for subject %s' % subject_id)
+    df_subject = df[df["Subject Number"] == subject_id]
+    df_subject_forehand = df_subject[df_subject["Annotation Level 1\n(Stroke Type)"] == 'Forehand Clear']
+    df_subject_backhand = df_subject[df_subject["Annotation Level 1\n(Stroke Type)"] == 'Backhand Driving']
+
     for (data_file_index, file_data) in enumerate(file_datas):
-        # Get the timestamped label data.
-        # As described in the HDF5 metadata, each row has entries for ['Activity', 'Start/Stop', 'Valid', 'Notes'].
-        device_name = 'experiment-activities'
-        stream_name = 'activities'
-        activity_datas = file_data[device_name][stream_name]['data']
-        activity_times_s = file_data[device_name][stream_name]['time_s']
-        activity_times_s = np.squeeze(
-            np.array(activity_times_s))  # squeeze (optional) converts from a list of single-element lists to a 1D list
-        # Convert to strings for convenience.
-        activity_datas = [[x.decode('utf-8') for x in datas] for datas in activity_datas]
-        # Combine start/stop rows to single activity entries with start/stop times.
-        #   Each row is either the start or stop of the label.
-        #   The notes and ratings fields are the same for the start/stop rows of the label, so only need to check one.
-        exclude_bad_labels = False  # some activities may have been marked as 'Bad' or 'Maybe' by the experimenter; submitted notes with the activity typically give more information
-        activities_labels = []
-        activities_start_times_s = []
-        activities_end_times_s = []
-        activities_ratings = []
-        activities_notes = []
-        for (row_index, time_s) in enumerate(activity_times_s):
-            label = activity_datas[row_index][0]
-            is_start = activity_datas[row_index][1] == 'Start'
-            is_stop = activity_datas[row_index][1] == 'Stop'
-            rating = activity_datas[row_index][2]
-            notes = activity_datas[row_index][3]
-            if rating is None:
-                print('!!! Rating None !!!!')
-            if exclude_bad_labels and rating in ['Bad', 'Normal']:
-                continue
-            # Record the start of a new activity.
-            if is_start and rating is not None:
-                activities_labels.append(label)
-                activities_start_times_s.append(time_s)
-                activities_ratings.append(rating)
-                activities_notes.append(notes)
-            # Record the end of the previous activity.
-            if is_stop and rating is not None:
-                activities_end_times_s.append(time_s)
-        # Loop through each activity that is designated for classification.
-        for (label_index, activity_label) in enumerate(activities_to_classify):
-            if label_index == baseline_index:
-                continue
-            # Extract num_segments_per_subject examples from each instance of the activity.
-            # Then later, will select num_segments_per_subject in total from all instances.
-            file_label_indexes = [i for (i, label) in enumerate(activities_labels) if label == activity_label]
-            if len(file_label_indexes) == 0 and activity_label in activities_renamed:
-                for alternate_label in activities_renamed[activity_label]:
-                    file_label_indexes = [i for (i, label) in enumerate(activities_labels) if label == alternate_label]
-                    if len(file_label_indexes) > 0:
-                        print('  Found renamed activity from "%s"' % alternate_label)
-                        break
-            print('  Found %d instances of %s' % (len(file_label_indexes), activity_label))
 
-            for file_label_index in file_label_indexes:
-                try:
-                    start_time_s = activities_start_times_s[file_label_index]
-                    end_time_s = activities_end_times_s[file_label_index]
-                    duration_s = end_time_s - start_time_s
-                    # Extract example segments and generate a feature matrix for each one.
-                    # num_examples = int(num_segments_per_subject/len(file_label_indexes))
-                    # if file_label_index == file_label_indexes[-1]:
-                    #   num_examples = num_segments_per_subject - num_examples*(len(file_label_indexes)-1)
-                    num_examples = num_segments_per_subject
-                    print('  Extracting %d examples from activity "%s" with duration %0.2fs' % (
-                        num_examples, activity_label, duration_s))
-                    # print('file data : ', file_data)
-                    feature_matrices = get_feature_matrices(file_data,
-                                                            start_time_s, end_time_s,
-                                                            count=num_examples)
-                    example_matrices_byLabel.setdefault(activity_label, [])
-                    example_matrices_byLabel[activity_label].extend(feature_matrices)
-                except IndexError:
-                    print('list index out of range')
+        sub_example_labels = []
+        sub_example_label_indexes = []
+        sub_example_subject_ids = []
 
-        # Generate matrices for not doing any activity.
-        # Will generate one matrix for each inter-activity portion,
-        #  then later select num_baseline_segments_per_subject of them.
-        for (label_index, activity_label) in enumerate(activities_labels):
-            if label_index == len(activities_labels) - 1:
-                continue
-            print('  Getting baseline examples between activity "%s"' % (activity_label))
-            noActivity_start_time_s = activities_end_times_s[label_index]
-            noActivity_end_time_s = activities_start_times_s[label_index + 1]
-            duration_s = noActivity_end_time_s - noActivity_start_time_s
-            if duration_s < segment_duration_s:
-                continue
-            # Extract example segments and generate a feature matrix for each one.
-            feature_matrices = get_feature_matrices(file_data,
-                                                    noActivity_start_time_s,
-                                                    noActivity_end_time_s,
-                                                    count=10)
-            noActivity_matrices.extend(feature_matrices)
+        Forehand_start_time_list = df_subject_forehand['Annotation Start Time'].values.tolist()
+        Forehand_stop_time_list = df_subject_forehand['Annotation Stop Time'].values.tolist()
+        Backhand_start_time_list = df_subject_backhand['Annotation Start Time'].values.tolist()
+        Backhand_stop_time_list = df_subject_backhand['Annotation Stop Time'].values.tolist()
+        NoActivity_start_time_list = []
+        NoActivity_stop_time_list = []
+        NoActivity_start_time_list.extend(Forehand_stop_time_list[0:-1])
+        NoActivity_start_time_list.extend(Backhand_stop_time_list[0:-1])
+        NoActivity_stop_time_list.extend(Forehand_start_time_list[1:])
+        NoActivity_stop_time_list.extend(Backhand_start_time_list[1:])
 
-    # Choose a subset of the examples of each label, so the correct number is retained.
-    # Will evenly distribute the selected indexes over all possibilities.
-    for (activity_label_index, activity_label) in enumerate(activities_to_classify):
-        if activity_label_index == baseline_index:
-            continue
-        print(' Selecting %d examples for subject %s of activity "%s"' % (
-            num_segments_per_subject, subject_id, activity_label))
-        if activity_label not in example_matrices_byLabel:
-            print('\n' * 5)
-            print('=' * 50)
-            print('=' * 50)
-            print('  No examples found!')
-            # print('  Press enter to continue ')
-            print('\n' * 5)
-            time.sleep(10)
-            continue
-        feature_matrices = example_matrices_byLabel[activity_label]
-        example_indexes = np.round(np.linspace(0, len(feature_matrices) - 1,
-                                               endpoint=True,
-                                               num=num_segments_per_subject,
-                                               dtype=int))
-        for example_index in example_indexes:
-            example_labels.append(activity_label)
-            example_label_indexes.append(activity_label_index)
-            example_matrices.append(feature_matrices[example_index])
-            example_subject_ids.append(subject_id)
+        example_matrices_device_eye_gaze = []
+        example_matrices_device_gforce_lowerarm_emg = []
+        example_matrices_device_gforce_upperarm_emg = []
+        example_matrices_device_cgx_aim_emg = []
+        example_matrices_device_moticon_insole_left_pressure = []
+        example_matrices_device_moticon_insole_right_pressure = []
+        example_matrices_device_moticon_insole_cop = []
+        example_matrices_device_pns_joint_Euler = []
 
-    # Choose a subset of the baseline examples.
-    print(' Selecting %d examples for subject %s of activity "%s"' % (
-        num_baseline_segments_per_subject, subject_id, baseline_label))
-    noActivity_indexes = np.round(np.linspace(0, len(noActivity_matrices) - 1,
-                                              endpoint=True,
-                                              num=num_baseline_segments_per_subject,
-                                              dtype=int))
-    for noActivity_index in noActivity_indexes:
-        # try:
-        example_labels.append(baseline_label)
-        example_label_indexes.append(baseline_index)
-        example_matrices.append(noActivity_matrices[noActivity_index])
-        example_subject_ids.append(subject_id)
-        # except IndexError:
-        #     print('INDEX ERROR')
+        print('Total Labeling Number :', len(Forehand_start_time_list) + len(Backhand_start_time_list))
+        print('Saved Highclear Labeling Number :', len(Forehand_start_time_list), len(Forehand_stop_time_list))
+        print('Saved Backhand Labeling Number :', len(Backhand_start_time_list), len(Backhand_stop_time_list))
+        print('Saved NoActivity Labeling Number :', len(NoActivity_start_time_list), len(NoActivity_stop_time_list))
 
-print()
+        device_num = 1
+        for (device_name, stream_name, _) in device_streams_for_features:
+            example_matrices_each_file = []
+            print("Device Name :", device_name)
+            data = np.squeeze(np.array(file_data[device_name][stream_name]['data']))
+            time_s = np.squeeze(np.array(file_data[device_name][stream_name]['time_s']))
+            label_indexes = [0] * len(time_s)
 
-#########################################
-############# SAVE RESULTS  #############
-#########################################
+            # Initialize the Number of each stroke
+            Num_base = 0
+            Num_clear = 0
+            Num_drive = 0
+
+            # Save the Forehand Clear Data
+            highNum = 0
+            backNum = 0
+            baseNum = 0
+
+            for j in range(len(Forehand_start_time_list)):
+                # Save the swing time of each stroke
+                Forehand_time_list.append(Forehand_stop_time_list[j]-Forehand_start_time_list[j])
+                # time indexing
+                high_time_indexes = np.where((time_s >= Forehand_start_time_list[j]) & (time_s <= Forehand_stop_time_list[j]))
+
+                if len(high_time_indexes[0]) > 0:
+                    if len(data[high_time_indexes[0][0]:high_time_indexes[0][0] + segment_length, :]) == segment_length:
+                        example_matrices_each_file.append(data[high_time_indexes[0][0] :high_time_indexes[0][0] + segment_length, :].tolist())
+                        highNum += 1
+                        if len(device_streams_for_features) == device_num:
+                            sub_example_label_indexes.append(1)
+                            sub_example_labels.append('Forehand Clear')
+                            sub_example_subject_ids.append(subject_id)
+                            Num_clear += 1
+                for m in range(len(high_time_indexes[0])):
+                    label_indexes[high_time_indexes[0][m]] = 1
+
+            for j in range(len(Backhand_start_time_list)):
+                Backhand_time_list.append(Backhand_stop_time_list[j] - Backhand_start_time_list[j])
+                back_time_indexes = np.where((time_s >= Backhand_start_time_list[j]) & (time_s <= Backhand_stop_time_list[j]))
+                if len(back_time_indexes[0]) > 0:
+                    if len(data[back_time_indexes[0][0]: back_time_indexes[0][0] + segment_length, :]) == segment_length:
+                        example_matrices_each_file.append(data[back_time_indexes[0][0]:back_time_indexes[0][0] + segment_length, :].tolist())
+                        backNum += 1
+                        if len(device_streams_for_features) == device_num:
+                            sub_example_label_indexes.append(2)
+                            sub_example_labels.append('Backhand Driving')
+                            sub_example_subject_ids.append(subject_id)
+                            Num_drive += 1
+                for m in range(len(back_time_indexes[0])):
+                    label_indexes[back_time_indexes[0][m]] = 2
+
+            # Save the Baseline Data
+            for j in range(len(NoActivity_start_time_list)):
+                no_time_indexes = np.where(
+                    (time_s >= NoActivity_start_time_list[j]) & (time_s <= NoActivity_stop_time_list[j]))
+                if len(no_time_indexes[0]) > 0:
+                    if len(data[no_time_indexes[0][0]:no_time_indexes[0][0] + segment_length, :]) == segment_length:
+                        example_matrices_each_file.append(data[no_time_indexes[0][0]:no_time_indexes[0][0] + segment_length, :].tolist())
+                        baseNum += 1
+                        if len(device_streams_for_features) == device_num:
+                            sub_example_label_indexes.append(0)
+                            sub_example_labels.append('Baseline')
+                            sub_example_subject_ids.append(subject_id)
+                            Num_base += 1
+
+            if device_name == "eye-gaze":
+                example_matrices_device_eye_gaze.append(example_matrices_each_file)
+            elif device_name == "gforce-lowerarm-emg":
+                example_matrices_device_gforce_lowerarm_emg.append(example_matrices_each_file)
+            elif device_name == "gforce-upperarm-emg":
+                example_matrices_device_gforce_upperarm_emg.append(example_matrices_each_file)
+            elif device_name == "cgx-aim-leg-emg":
+                example_matrices_device_cgx_aim_emg.append(example_matrices_each_file)
+            elif device_name == "moticon-insole" and stream_name == 'left-pressure':
+                example_matrices_device_moticon_insole_left_pressure.append(example_matrices_each_file)
+            elif device_name == "moticon-insole" and stream_name == 'right-pressure':
+                example_matrices_device_moticon_insole_right_pressure.append(example_matrices_each_file)
+            elif device_name == "moticon-insole" and stream_name == 'cop':
+                example_matrices_device_moticon_insole_cop.append(example_matrices_each_file)
+            elif device_name == "pns-joint":
+                example_matrices_device_pns_joint_Euler.append(example_matrices_each_file)
+
+            device_num += 1
+            # print("highNum")
+            # print(highNum)
+            # print("backNum")
+            # print(backNum)
+            # print("baseNum")
+            # print(baseNum)
+            # print("totalNum")
+            # print(highNum + backNum + baseNum)
+
+        device_array1 = np.squeeze(np.array(example_matrices_device_eye_gaze), axis=0)
+        device_array2 = np.squeeze(np.array(example_matrices_device_gforce_lowerarm_emg), axis=0)
+        device_array3 = np.squeeze(np.array(example_matrices_device_gforce_upperarm_emg), axis=0)
+        device_array4 = np.squeeze(np.array(example_matrices_device_cgx_aim_emg), axis=0)
+        device_array5 = np.squeeze(np.array(example_matrices_device_moticon_insole_left_pressure), axis=0)
+        device_array6 = np.squeeze(np.array(example_matrices_device_moticon_insole_right_pressure), axis=0)
+        device_array7 = np.squeeze(np.array(example_matrices_device_moticon_insole_cop), axis=0)
+        device_array8 = np.squeeze(np.array(example_matrices_device_pns_joint_Euler), axis=0)
+
+        print("Feature shape of each device")
+        print(device_array1.shape)
+        print(device_array2.shape)
+        print(device_array3.shape)
+        print(device_array4.shape)
+        print(device_array5.shape)
+        print(device_array6.shape)
+        print(device_array7.shape)
+        print(device_array8.shape)
+
+        if all(array.shape[0] == device_array1.shape[0] for array in [device_array2, device_array3, device_array4, device_array5, device_array6, device_array7, device_array8]):
+            combined_array = np.concatenate((device_array1, device_array2, device_array3, device_array4, device_array5, device_array6, device_array7, device_array8), axis=2)
+            print(combined_array.shape)
+            print(np.array(sub_example_label_indexes).shape)
+            print(np.array(sub_example_labels).shape)
+            print(np.array(sub_example_subject_ids).shape)
+            example_label_indexes.extend(sub_example_label_indexes)
+            example_labels.extend(sub_example_labels)
+            example_subject_ids.extend(sub_example_subject_ids)
+        else:
+            min_ = min(device_array1.shape[0], device_array2.shape[0], device_array3.shape[0], device_array4.shape[0], device_array5.shape[0], device_array6.shape[0], device_array7.shape[0], device_array8.shape[0])
+            print(min_)
+            example_label_indexes.extend(sub_example_label_indexes[:min_])
+            example_labels.extend(sub_example_labels[:min_])
+            example_subject_ids.extend(sub_example_subject_ids[:min_])
+            combined_array = np.concatenate((device_array1[:min_, :, :], device_array2[:min_, :, :], device_array3[:min_, :, :], device_array4[:min_, :, :], device_array5[:min_, :, :], device_array6[:min_, :, :], device_array7[:min_, :, :], device_array8[:min_, :, :]), axis=2)
+            print(combined_array.shape)
+        # combined_array_squeezd = np.squeeze(combined_array, axis=0)
+        example_matrices_list.append(combined_array)
+
+example_matrices = np.concatenate([arr for arr in example_matrices_list], axis=0)
+print('total feature shape')
+print(example_matrices.shape)
+print(np.array(example_labels).shape)
+print(np.array(example_label_indexes).shape)
+print(np.array(example_subject_ids).shape)
 
 if output_filepath is not None:
     with h5py.File(output_filepath, 'w') as hdf_file:
@@ -692,12 +724,9 @@ if output_filepath is not None:
         metadata['data_folders_bySubject'] = data_folders_bySubject
         metadata['activities_to_classify'] = activities_to_classify
         metadata['device_streams_for_features'] = device_streams_for_features
-        metadata['segment_duration_s'] = segment_duration_s
+        metadata['resampled_Fs'] = resampled_Fs
         metadata['segment_length'] = segment_length
-        metadata['num_segments_per_subject'] = num_segments_per_subject
-        metadata['num_baseline_segments_per_subject'] = num_baseline_segments_per_subject
-        metadata['buffer_startActivity_s'] = buffer_startActivity_s
-        metadata['buffer_endActivity_s'] = buffer_endActivity_s
+        metadata['segment_duration_s'] = segment_duration_s
         metadata['filter_cutoff_emg_Hz'] = filter_cutoff_emg_Hz
         metadata['filter_cutoff_pressure_Hz'] = filter_cutoff_pressure_Hz
         metadata['filter_cutoff_gaze_Hz'] = filter_cutoff_gaze_Hz
@@ -714,6 +743,3 @@ if output_filepath is not None:
         print()
         print('Saved processed data to', output_filepath)
         print()
-
-
-
