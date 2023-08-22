@@ -1,9 +1,9 @@
 
-# ActionNet - Badminton Stroke Data Collection
-
-For dataset, you can refer to the site: XXX
+# MultiSenseBadminton: Wearable Sensor–Based Biomechanical Dataset for Evaluation of Badminton Performance
 
 The sports industry is witnessing an increasing trend of utilizing multiple synchronized sensors to collect player data, enabling the creation of personalized training systems with real-time feedback from multiple perspectives. Badminton could benefit from these various sensors, but there is a notable lack of comprehensive badminton action datasets for analysis and training feedback. To address this gap, this paper introduces a multi-sensor-based badminton action dataset for forehand clear and backhand drive strokes. This includes 7,763 badminton swing data from 25 players. It provides eye tracking, body tracking, muscle signals, foot pressure, detailed annotation data on stroke type, skill level, hitting sound, ball landing, hitting location, survey data, and interview data. The dataset was designed based on interviews with badminton coaches to ensure usability. The dataset includes a range of skills consisting of 12 novices, 8 intermediates, and 5 experts, providing resources for understanding biomechanics across skill levels. We validate the potential usefulness of our dataset by applying a proof-of-concept machine learning model to classify stroke type and level of expertise.
+
+This project was conducted as a component of collaborative research between GIST and MIT, and it originated from MIT's earlier research endeavor known as NeurIPS ActionSense. For the data set collection framework, preprocessing of sensor data, and network system in this study, the approach outlined in the ActionSense paper was adopted. Further details can be found on the ActionSense GitHub repository and project page. [Project Pages](https://action-net.csail.mit.edu/), [GitHub](https://github.com/delpreto/ActionNet)
 
 ## Sensors to use
 
