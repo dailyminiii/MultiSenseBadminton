@@ -33,7 +33,7 @@ This project was conducted as a component of collaborative research between GIST
 
 ## Contact
 
-If you have any questions regarding the dataset, please feel free to contact me at seongminwoo@gm.gist.ac.kr.
+If you have any questions regarding the dataset, please feel free to contact me at seongminwoo AT gist ac kr.
 
 
 
