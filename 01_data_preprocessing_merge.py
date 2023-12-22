@@ -1,26 +1,3 @@
-############
-# MIT License
-#
-# Copyright (c) 2023 Minwoo Seong
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 import h5py
 import numpy as np
 from scipy import interpolate  # for resampling
@@ -45,8 +22,8 @@ from utils.time_utils import *
 
 # Define where outputs will be saved.
 output_dir = os.path.join(script_dir, 'data_processed')
-output_filepath = os.path.join(output_dir, 'data_processed_allStreams_60hz_21subj_allActs.hdf5') # output file name
-annotation_data_filePath = '../Badminton ActionNet/Data_Archive/Annotation Data File.xlsx' # directory of annotation data xlsx file
+output_filepath = os.path.join(output_dir, 'data_processed_allStreams_60hz_18subj_allActs_skill_level.hdf5') # output file name
+annotation_data_filePath = '../src/Annotation Data Classification.xlsx' # directory of annotation data xlsx file
 # output_filepath = None
 
 # Define the modalities to use.
@@ -65,7 +42,7 @@ device_streams_for_features = [
 
 # Specify the input data.
 # data_root_dir = os.path.join(script_dir, 'Data_Archive')
-data_root_dir = '../Badminton ActionNet/Data_Archive/'
+data_root_dir = '../src/Data_Archive/'
 
 data_folders_bySubject = OrderedDict([
     ('Sub00', os.path.join(data_root_dir, 'Sub00')),
@@ -78,13 +55,13 @@ data_folders_bySubject = OrderedDict([
     ('Sub07', os.path.join(data_root_dir, 'Sub07')),
     # ('Sub08', os.path.join(data_root_dir, 'Sub08')),
     ('Sub09', os.path.join(data_root_dir, 'Sub09')),
-    ('Sub10', os.path.join(data_root_dir, 'Sub10')),
+    # ('Sub10', os.path.join(data_root_dir, 'Sub10')),
     ('Sub11', os.path.join(data_root_dir, 'Sub11')),
     # ('Sub12', os.path.join(data_root_dir, 'Sub12')),
-    ('Sub13', os.path.join(data_root_dir, 'Sub13')),
+    # ('Sub13', os.path.join(data_root_dir, 'Sub13')),
     ('Sub14', os.path.join(data_root_dir, 'Sub14')),
     ('Sub15', os.path.join(data_root_dir, 'Sub15')),
-    ('Sub16', os.path.join(data_root_dir, 'Sub16')),
+    # ('Sub16', os.path.join(data_root_dir, 'Sub16')),
     ('Sub17', os.path.join(data_root_dir, 'Sub17')),
     ('Sub18', os.path.join(data_root_dir, 'Sub18')),
     ('Sub19', os.path.join(data_root_dir, 'Sub19')),
@@ -121,10 +98,10 @@ buffer_startActivity_s = 0.01
 buffer_endActivity_s = 0.01
 
 # Define filtering parameters.
-filter_cutoff_emg_Hz = 15
+filter_cutoff_emg_Hz = 5
 filter_cutoff_emg_cognionics_Hz = 20
-filter_cutoff_pressure_Hz = 10
-filter_cutoff_gaze_Hz = 10
+filter_cutoff_pressure_Hz = 5
+filter_cutoff_gaze_Hz = 5
 
 # Make the output folder if needed.
 if output_dir is not None:
@@ -306,19 +283,18 @@ for (subject_id, file_datas) in data_bySubject.items():
             #     plt.show()
             #     plt.clf()
             file_data['eye-gaze']['gaze']['data'] = y
-        for moticon_key in ['left-pressure', 'right-pressure', 'cop']:
-            if moticon_key in file_data:
-                t = file_data['moticon-insole'][moticon_key]['time_s']
-                Fs = (t.size - 1) / (t[-1] - t[0])
-                print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % ('moticon-insole', Fs, filter_cutoff_pressure_Hz))
-                data_stream = file_data['moticon-insole'][moticon_key]['data'][:, :]
-                y = np.abs(data_stream)
-                y = lowpass_filter(y, filter_cutoff_pressure_Hz, Fs)
-                # plt.plot(t-t[0], data_stream[:,0], label=moticon_key+'_raw')
-                # plt.plot(t-t[0], y[:,0], label=moticon_key+'_preprocessed')
-                # plt.legend()
-                # plt.show()
-                file_data['moticon-insole'][moticon_key]['data'] = y
+        for moticon_key in ['left-pressure', 'right-pressure', 'cop']:           
+            t = file_data['moticon-insole'][moticon_key]['time_s']
+            Fs = (t.size - 1) / (t[-1] - t[0])
+            print(' Filtering %s with Fs %0.1f Hz to cutoff %f' % ('moticon-insole', Fs, filter_cutoff_pressure_Hz))
+            data_stream = file_data['moticon-insole'][moticon_key]['data'][:, :]
+            y = np.abs(data_stream)
+            y = lowpass_filter(y, filter_cutoff_pressure_Hz, Fs)
+            # plt.plot(t-t[0], data_stream[:,0], label=moticon_key+'_raw')
+            # plt.plot(t-t[0], y[:,0], label=moticon_key+'_preprocessed')
+            # plt.legend()
+            # plt.show()
+            file_data['moticon-insole'][moticon_key]['data'] = y
         data_bySubject[subject_id][data_file_index] = file_data
 
 # Normalize data.
@@ -330,10 +306,12 @@ for (subject_id, file_datas) in data_bySubject.items():
         for gforce_key in ['gforce-lowerarm-emg', 'gforce-upperarm-emg']:
             if gforce_key in file_data:
                 data_stream = file_data[gforce_key]['emg-values']['data'][:, :]
+                min_val = 0
+                max_val = 300
                 y = data_stream
                 print(' Normalizing %s with min/max [%0.1f, %0.1f]' % (gforce_key, np.amin(y), np.amax(y)))
                 # Normalize them jointly.
-                y = y / ((np.amax(y) - np.amin(y)) / 2)
+                y = y / ((max_val - min_val) / 2)
                 # Jointly shift the baseline to -1 instead of 0.
                 y = y - np.amin(y) - 1
                 file_data[gforce_key]['emg-values']['data'] = y
@@ -448,125 +426,39 @@ for (subject_id, file_datas) in data_bySubject.items():
 
         data_bySubject[subject_id][data_file_index] = file_data
 
-# Resample data.
 print()
-for (subject_id, file_datas) in data_bySubject.items():
-    print('Resampling data for subject %s' % subject_id)
-    for (data_file_index, file_data) in enumerate(file_datas):
-        for (device_name, stream_name, _) in device_streams_for_features:
-            data = np.squeeze(np.array(file_data[device_name][stream_name]['data']))
-            time_s = np.squeeze(np.array(file_data[device_name][stream_name]['time_s']))
-            target_time_s = np.linspace(time_s[0], time_s[-1],
-                                        num=int(round(1 + resampled_Fs * (time_s[-1] - time_s[0]))),
-                                        endpoint=True)
-            fn_interpolate = interpolate.interp1d(
-                time_s,  # x values
-                data,  # y values
-                axis=0,  # axis of the data along which to interpolate
-                kind='linear',  # interpolation method, such as 'linear', 'zero', 'nearest', 'quadratic', 'cubic', etc.
-                fill_value='extrapolate'  # how to handle x values outside the original range
-            )
-            data_resampled = fn_interpolate(target_time_s)
-            if np.any(np.isnan(data_resampled)):
-                print('\n' * 5)
-                print('=' * 50)
-                print('=' * 50)
-                print('FOUND NAN')
-                print(subject_id, device_name, stream_name)
-                timesteps_have_nan = np.any(np.isnan(data_resampled), axis=tuple(np.arange(1, np.ndim(data_resampled))))
-                print('Timestep indexes with NaN:', np.where(timesteps_have_nan)[0])
-                print_var(data_resampled)
-                # input('Press enter to continue ')
-                print('\n' * 5)
-                time.sleep(10)
-                data_resampled[np.isnan(data_resampled)] = 0
-            file_data[device_name][stream_name]['time_s'] = target_time_s
-            file_data[device_name][stream_name]['data'] = data_resampled
-        data_bySubject[subject_id][data_file_index] = file_data
-
-
-#########################################
-############ CREATE FEATURES ############
-#########################################
-
-def get_feature_matrices(experiment_data, label_start_time_s, label_end_time_s, count=num_segments_per_subject):
-    # Determine start/end times for each example segment.
-    start_time_s = label_start_time_s + buffer_startActivity_s
-    end_time_s = label_end_time_s - buffer_endActivity_s
-    segment_start_times_s = np.linspace(start_time_s, end_time_s - segment_duration_s,
-                                        num=count,
-                                        endpoint=True)
-    # Create a feature matrix by concatenating each desired sensor stream.
-    feature_matrices = []
-    for segment_start_time_s in segment_start_times_s:
-        # print('Processing segment starting at %f' % segment_start_time_s)
-        segment_end_time_s = segment_start_time_s + segment_duration_s
-        feature_matrix = np.empty(shape=(segment_length, 0))
-        for (device_name, stream_name, extraction_fn) in device_streams_for_features:
-
-            print(' Adding data from [%s][%s]' % (device_name, stream_name))
-            data = np.squeeze(np.array(experiment_data[device_name][stream_name]['data']))
-            time_s = np.squeeze(np.array(experiment_data[device_name][stream_name]['time_s']))
-            time_indexes = np.where((time_s >= segment_start_time_s) & (time_s <= segment_end_time_s))[0]
-            # Expand if needed until the desired segment length is reached.
-            time_indexes = list(time_indexes)
-            while len(time_indexes) < segment_length:
-                print(' Increasing segment length from %d to %d for %s %s for segment starting at %f' % (
-                    len(time_indexes), segment_length, device_name, stream_name, segment_start_time_s))
-                if time_indexes[0] > 0:
-                    time_indexes = [time_indexes[0] - 1] + time_indexes
-                elif time_indexes[-1] < len(time_s) - 1:
-                    time_indexes.append(time_indexes[-1] + 1)
-                else:
-                    raise AssertionError
-            while len(time_indexes) > segment_length:
-                print(' Decreasing segment length from %d to %d for %s %s for segment starting at %f' % (
-                    len(time_indexes), segment_length, device_name, stream_name, segment_start_time_s))
-                time_indexes.pop()
-            time_indexes = np.array(time_indexes)
-
-            # Extract the data.
-            time_s = time_s[time_indexes]
-            data = data[time_indexes, :]
-            data = extraction_fn(data)
-            print('  Got data of shape', data.shape)
-            # Add it to the feature matrix.
-            data = np.reshape(data, (segment_length, -1))
-            if np.any(np.isnan(data)):
-                print('\n' * 5)
-                print('=' * 50)
-                print('=' * 50)
-                print('FOUND NAN')
-                print(device_name, stream_name, segment_start_time_s)
-                timesteps_have_nan = np.any(np.isnan(data), axis=tuple(np.arange(1, np.ndim(data))))
-                print('Timestep indexes with NaN:', np.where(timesteps_have_nan)[0])
-                print_var(data)
-                # input('Press enter to continue ')
-                print('\n' * 5)
-                time.sleep(10)
-                data[np.isnan(data)] = 0
-            feature_matrix = np.concatenate((feature_matrix, data), axis=1)
-        feature_matrices.append(feature_matrix)
-    # print(len(feature_matrices), feature_matrices[0].shape)
-    return feature_matrices
-
-
-#########################################
-############ CREATE EXAMPLES ############
-#########################################
 
 example_labels = []
 example_label_indexes = []
 example_matrices_list = []
 example_subject_ids = []
+example_skill_level = []
+example_score_annot_3_hori = []
+example_score_annot_3_ver = []
+example_score_annot_4 = []
+example_score_annot_5 = []
+
 Forehand_time_list = []
 Backhand_time_list = []
+NoActivity_time_list = []
 
 df = pd.read_excel(annotation_data_filePath)
 
+# Remove rows where the specified columns contain "NoVid"
+df_filtered = df[
+    (df["Annotation Level 3\n(Landing Location - Horizontal)"] != "NoVid") &
+    (df["Annotation Level 3\n(Landing Location - Vertical)"] != "NoVid") &
+    (df["Annotation Level 4\n(Hitting Location, major voting)"] != "NoVid") &
+    (df["Annotation Level 5\n(Hitting Sound, major voting)"] != "NoVid")
+    ]
+
+print(len(df_filtered))
+
 for (subject_id, file_datas) in data_bySubject.items():
     print('Resampling data for subject %s' % subject_id)
-    df_subject = df[df["Subject Number"] == subject_id]
+
+    df_subject = df_filtered[df_filtered["Subject Number"] == subject_id]
+
     df_subject_forehand = df_subject[df_subject["Annotation Level 1\n(Stroke Type)"] == 'Forehand Clear']
     df_subject_backhand = df_subject[df_subject["Annotation Level 1\n(Stroke Type)"] == 'Backhand Driving']
 
@@ -575,11 +467,31 @@ for (subject_id, file_datas) in data_bySubject.items():
         sub_example_labels = []
         sub_example_label_indexes = []
         sub_example_subject_ids = []
+        sub_example_skill_level = []
+
+        sub_example_score_annot_3_hori = []
+        sub_example_score_annot_3_ver = []
+        sub_example_score_annot_4 = []
+        sub_example_score_annot_5 = []
 
         Forehand_start_time_list = df_subject_forehand['Annotation Start Time'].values.tolist()
         Forehand_stop_time_list = df_subject_forehand['Annotation Stop Time'].values.tolist()
         Backhand_start_time_list = df_subject_backhand['Annotation Start Time'].values.tolist()
         Backhand_stop_time_list = df_subject_backhand['Annotation Stop Time'].values.tolist()
+
+        Forehand_skill_level_list = df_subject_forehand['Annotation Level 2\n(Skill Level)'].values.tolist()
+        Backhand_skill_level_list = df_subject_backhand['Annotation Level 2\n(Skill Level)'].values.tolist()
+
+        Forehand_score_annot_3_hori_list = df_subject_forehand["Annotation Level 3\n(Landing Location - Horizontal)"].values.tolist()
+        Backhand_score_annot_3_hori_list = df_subject_backhand["Annotation Level 3\n(Landing Location - Horizontal)"].values.tolist()
+        Forehand_score_annot_3_ver_list = df_subject_forehand["Annotation Level 3\n(Landing Location - Vertical)"].values.tolist()
+        Backhand_score_annot_3_ver_list = df_subject_backhand["Annotation Level 3\n(Landing Location - Vertical)"].values.tolist()
+
+        Forehand_score_annot_4_list = df_subject_forehand["Annotation Level 4\n(Hitting Location, major voting)"].values.tolist()
+        Backhand_score_annot_4_list = df_subject_backhand["Annotation Level 4\n(Hitting Location, major voting)"].values.tolist()
+        Forehand_score_annot_5_list = df_subject_forehand["Annotation Level 5\n(Hitting Sound, major voting)"].values.tolist()
+        Backhand_score_annot_5_list = df_subject_backhand["Annotation Level 5\n(Hitting Sound, major voting)"].values.tolist()
+
         NoActivity_start_time_list = []
         NoActivity_stop_time_list = []
         NoActivity_start_time_list.extend(Forehand_stop_time_list[0:-1])
@@ -596,10 +508,22 @@ for (subject_id, file_datas) in data_bySubject.items():
         example_matrices_device_moticon_insole_cop = []
         example_matrices_device_pns_joint_Euler = []
 
-        print('Total Labeling Number :', len(Forehand_start_time_list) + len(Backhand_start_time_list))
+        print('Total Labeling Number :', len(Forehand_start_time_list) + len(Backhand_start_time_list) + len(NoActivity_start_time_list))
         print('Saved Highclear Labeling Number :', len(Forehand_start_time_list), len(Forehand_stop_time_list))
         print('Saved Backhand Labeling Number :', len(Backhand_start_time_list), len(Backhand_stop_time_list))
         print('Saved NoActivity Labeling Number :', len(NoActivity_start_time_list), len(NoActivity_stop_time_list))
+
+        print('Save Forehand Score annot 3 Hori Number :', len(Forehand_score_annot_3_hori_list))
+        print('Save Forehand Score annot 3 Ver Number :', len(Forehand_score_annot_3_ver_list))
+        print('Save Forehand Score annot 4 Number :', len(Forehand_score_annot_4_list))
+        print('Save Forehand Score annot 5 Number :', len(Forehand_score_annot_5_list))
+
+        # print('Save Backhand Score Number :', len(Backhand_score_list))
+        print('Save Backhand Score annot 3 Hori Number :', len(Backhand_score_annot_3_hori_list))
+        print('Save Backhand Score annot 3 Ver Number :', len(Backhand_score_annot_3_ver_list))
+        print('Save Backhand Score annot 4 Number :', len(Backhand_score_annot_4_list))
+        print('Save Backhand Score annot 5 Number :', len(Backhand_score_annot_5_list))
+
 
         device_num = 1
         for (device_name, stream_name, _) in device_streams_for_features:
@@ -607,6 +531,11 @@ for (subject_id, file_datas) in data_bySubject.items():
             print("Device Name :", device_name)
             data = np.squeeze(np.array(file_data[device_name][stream_name]['data']))
             time_s = np.squeeze(np.array(file_data[device_name][stream_name]['time_s']))
+            
+            _, unique_indices = np.unique(time_s, return_index=True)
+            time_s = time_s[unique_indices]
+            data = data[unique_indices]
+
             label_indexes = [0] * len(time_s)
 
             # Initialize the Number of each stroke
@@ -626,45 +555,116 @@ for (subject_id, file_datas) in data_bySubject.items():
                 high_time_indexes = np.where((time_s >= Forehand_start_time_list[j]) & (time_s <= Forehand_stop_time_list[j]))
 
                 if len(high_time_indexes[0]) > 0:
-                    if len(data[high_time_indexes[0][0]:high_time_indexes[0][0] + segment_length, :]) == segment_length:
-                        example_matrices_each_file.append(data[high_time_indexes[0][0] :high_time_indexes[0][0] + segment_length, :].tolist())
-                        highNum += 1
-                        if len(device_streams_for_features) == device_num:
-                            sub_example_label_indexes.append(1)
-                            sub_example_labels.append('Forehand Clear')
-                            sub_example_subject_ids.append(subject_id)
-                            Num_clear += 1
+                    target_time_s_high = np.linspace(Forehand_start_time_list[j], Forehand_stop_time_list[j],
+                                        num=segment_length,
+                                        endpoint=True)
+
+                    fn_interpolate = interpolate.interp1d(
+                        time_s,  # x values
+                        data,  # y values
+                        axis=0,  # axis of the data along which to interpolate
+                        kind='slinear',  # interpolation method, such as 'linear', 'zero', 'nearest', 'quadratic', 'cubic', etc.
+                        fill_value='extrapolate'  # how to handle x values outside the original range
+                    )
+
+                    data_resampled = fn_interpolate(target_time_s_high)
+
+                    example_matrices_each_file.append(
+                        data_resampled.tolist())
+                    highNum += 1
+
+                    if len(device_streams_for_features) == device_num:
+                        sub_example_label_indexes.append(1)
+                        sub_example_labels.append('Forehand Clear')
+                        sub_example_subject_ids.append(subject_id)
+                        sub_example_skill_level.append(Forehand_skill_level_list[j])
+                        Num_clear += 1
+                        # sub_example_score.append(Forehand_score_list[j])
+                        sub_example_score_annot_3_hori.append(Forehand_score_annot_3_hori_list[j])
+                        sub_example_score_annot_3_ver.append(Forehand_score_annot_3_ver_list[j])
+                        sub_example_score_annot_4.append(Forehand_score_annot_4_list[j])
+                        sub_example_score_annot_5.append(Forehand_score_annot_5_list[j])
                 for m in range(len(high_time_indexes[0])):
                     label_indexes[high_time_indexes[0][m]] = 1
 
             for j in range(len(Backhand_start_time_list)):
                 Backhand_time_list.append(Backhand_stop_time_list[j] - Backhand_start_time_list[j])
-                back_time_indexes = np.where((time_s >= Backhand_start_time_list[j]) & (time_s <= Backhand_stop_time_list[j]))
+                back_time_indexes = np.where(
+                    (time_s >= Backhand_start_time_list[j]) & (time_s <= Backhand_stop_time_list[j]))
                 if len(back_time_indexes[0]) > 0:
-                    if len(data[back_time_indexes[0][0]: back_time_indexes[0][0] + segment_length, :]) == segment_length:
-                        example_matrices_each_file.append(data[back_time_indexes[0][0]:back_time_indexes[0][0] + segment_length, :].tolist())
-                        backNum += 1
-                        if len(device_streams_for_features) == device_num:
-                            sub_example_label_indexes.append(2)
-                            sub_example_labels.append('Backhand Driving')
-                            sub_example_subject_ids.append(subject_id)
-                            Num_drive += 1
+
+                    target_time_s_back = np.linspace(Backhand_start_time_list[j], Backhand_stop_time_list[j],
+                                        num=segment_length,
+                                        endpoint=True)
+
+                    fn_interpolate = interpolate.interp1d(
+                        time_s,  # x values
+                        data,  # y values
+                        axis=0,  # axis of the data along which to interpolate
+                        kind='slinear',  # interpolation method, such as 'linear', 'zero', 'nearest', 'quadratic', 'cubic', etc.
+                        fill_value='extrapolate'  # how to handle x values outside the original range
+                    )
+
+                    data_resampled = fn_interpolate(target_time_s_back)
+
+                    example_matrices_each_file.append(
+                        data_resampled.tolist())
+
+                    backNum += 1
+                    if len(device_streams_for_features) == device_num:
+                        sub_example_label_indexes.append(0)
+                        sub_example_labels.append('Backhand Driving')
+                        sub_example_subject_ids.append(subject_id)
+                        sub_example_skill_level.append(Backhand_skill_level_list[j])
+                        Num_drive += 1
+                        # sub_example_score.append(Backhand_score_list[j])
+                        sub_example_score_annot_3_hori.append(Backhand_score_annot_3_hori_list[j])
+                        sub_example_score_annot_3_ver.append(Backhand_score_annot_3_ver_list[j])
+                        sub_example_score_annot_4.append(Backhand_score_annot_4_list[j])
+                        sub_example_score_annot_5.append(Backhand_score_annot_5_list[j])
                 for m in range(len(back_time_indexes[0])):
-                    label_indexes[back_time_indexes[0][m]] = 2
+                    label_indexes[back_time_indexes[0][m]] = 0
+
 
             # Save the Baseline Data
             for j in range(len(NoActivity_start_time_list)):
+                NoActivity_time_list.append(NoActivity_stop_time_list[j] - NoActivity_start_time_list[j])
                 no_time_indexes = np.where(
                     (time_s >= NoActivity_start_time_list[j]) & (time_s <= NoActivity_stop_time_list[j]))
                 if len(no_time_indexes[0]) > 0:
-                    if len(data[no_time_indexes[0][0]:no_time_indexes[0][0] + segment_length, :]) == segment_length:
-                        example_matrices_each_file.append(data[no_time_indexes[0][0]:no_time_indexes[0][0] + segment_length, :].tolist())
-                        baseNum += 1
-                        if len(device_streams_for_features) == device_num:
-                            sub_example_label_indexes.append(0)
-                            sub_example_labels.append('Baseline')
-                            sub_example_subject_ids.append(subject_id)
-                            Num_base += 1
+
+                    target_time_s_no = np.linspace(NoActivity_start_time_list[j], NoActivity_stop_time_list[j],
+                                        num=segment_length,
+                                        endpoint=True)
+
+                    fn_interpolate = interpolate.interp1d(
+                        time_s,  # x values
+                        data,  # y values
+                        axis=0,  # axis of the data along which to interpolate
+                        kind='slinear',  # interpolation method, such as 'linear', 'zero', 'nearest', 'quadratic', 'cubic', etc.
+                        fill_value='extrapolate'  # how to handle x values outside the original range
+                    )
+
+                    data_resampled = fn_interpolate(target_time_s_no)
+
+                    example_matrices_each_file.append(
+                        data_resampled.tolist())
+
+                    baseNum += 1
+                    if len(device_streams_for_features) == device_num:
+                        sub_example_label_indexes.append(2)
+                        sub_example_labels.append('Baseline')
+                        sub_example_subject_ids.append(subject_id)
+                        sub_example_skill_level.append(-1)
+                        Num_base += 1
+                        # sub_example_score.append(Backhand_score_list[j])
+                        sub_example_score_annot_3_hori.append(-1)
+                        sub_example_score_annot_3_ver.append(-1)
+                        sub_example_score_annot_4.append(-1)
+                        sub_example_score_annot_5.append(-1)
+                for m in range(len(no_time_indexes[0])):
+                    label_indexes[no_time_indexes[0][m]] = 2
+                
 
             if device_name == "eye-gaze":
                 example_matrices_device_eye_gaze.append(example_matrices_each_file)
@@ -712,8 +712,12 @@ for (subject_id, file_datas) in data_bySubject.items():
         print(device_array7.shape)
         print(device_array8.shape)
 
+        if len(device_array1) == 0:
+            continue
+
         if all(array.shape[0] == device_array1.shape[0] for array in [device_array2, device_array3, device_array4, device_array5, device_array6, device_array7, device_array8]):
             combined_array = np.concatenate((device_array1, device_array2, device_array3, device_array4, device_array5, device_array6, device_array7, device_array8), axis=2)
+            
             print(combined_array.shape)
             print(np.array(sub_example_label_indexes).shape)
             print(np.array(sub_example_labels).shape)
@@ -721,13 +725,24 @@ for (subject_id, file_datas) in data_bySubject.items():
             example_label_indexes.extend(sub_example_label_indexes)
             example_labels.extend(sub_example_labels)
             example_subject_ids.extend(sub_example_subject_ids)
+            example_skill_level.extend(sub_example_skill_level)
+            example_score_annot_3_hori.extend(sub_example_score_annot_3_hori)
+            example_score_annot_3_ver.extend(sub_example_score_annot_3_ver)
+            example_score_annot_4.extend(sub_example_score_annot_4)
+            example_score_annot_5.extend(sub_example_score_annot_5)
         else:
             min_ = min(device_array1.shape[0], device_array2.shape[0], device_array3.shape[0], device_array4.shape[0], device_array5.shape[0], device_array6.shape[0], device_array7.shape[0], device_array8.shape[0])
             print(min_)
             example_label_indexes.extend(sub_example_label_indexes[:min_])
             example_labels.extend(sub_example_labels[:min_])
             example_subject_ids.extend(sub_example_subject_ids[:min_])
-            combined_array = np.concatenate((device_array1[:min_, :, :], device_array2[:min_, :, :], device_array3[:min_, :, :], device_array4[:min_, :, :], device_array5[:min_, :, :], device_array6[:min_, :, :], device_array7[:min_, :, :], device_array8[:min_, :, :]), axis=2)
+            combined_array = np.concatenate((device_array1[:min_, :, :], device_array2[:min_, :, :], device_array3[:min_, :, :], device_array4[:min_, :, :],
+                                             device_array5[:min_, :, :], device_array6[:min_, :, :], device_array7[:min_, :, :], device_array8[:min_, :, :]), axis=2)
+            example_skill_level.extend(sub_example_skill_level[:min_])
+            example_score_annot_3_hori.extend(sub_example_score_annot_3_hori[:min_])
+            example_score_annot_3_ver.extend(sub_example_score_annot_3_ver[:min_])
+            example_score_annot_4.extend(sub_example_score_annot_4[:min_])
+            example_score_annot_5.extend(sub_example_score_annot_5[:min_])
             print(combined_array.shape)
         # combined_array_squeezd = np.squeeze(combined_array, axis=0)
         example_matrices_list.append(combined_array)
@@ -760,6 +775,12 @@ if output_filepath is not None:
         hdf_file.create_dataset('example_label_indexes', data=example_label_indexes)
         hdf_file.create_dataset('example_matrices', data=example_matrices)
         hdf_file.create_dataset('example_subject_ids', data=example_subject_ids)
+        hdf_file.create_dataset('example_skill_level', data=example_skill_level)
+        # hdf_file.create_dataset('example_score', data=example_score)
+        hdf_file.create_dataset('example_score_annot_3_hori', data=example_score_annot_3_hori)
+        hdf_file.create_dataset('example_score_annot_3_ver', data=example_score_annot_3_ver)
+        hdf_file.create_dataset('example_score_annot_4', data=example_score_annot_4)
+        hdf_file.create_dataset('example_score_annot_5', data=example_score_annot_5)
 
         hdf_file.attrs.update(metadata)
 
