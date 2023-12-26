@@ -30,7 +30,8 @@ Access to the MultiSenseBadminton Dataset: The dataset for MultiSenseBadminton i
 
 ## Data Collection Framework
 
-![Data Collection Framework](https://user-images.githubusercontent.com/79134282/233351724-3bba3af4-1cbf-442c-a77f-a836ac986298.jpg)
+![SciData 2](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/7a499e20-4744-4a20-ba83-f5c5a95e2aee)
+
 
 ## Environment
 
@@ -42,11 +43,7 @@ Access to the MultiSenseBadminton Dataset: The dataset for MultiSenseBadminton i
 
 ## Data Preprocessing
 
-![Data Preprocessing](https://user-images.githubusercontent.com/79134282/233353008-060aae23-26a0-4684-8337-97ab22ac88e7.jpg)
-
-## Network Architecture
-
-![Network Architecture](https://user-images.githubusercontent.com/79134282/233352749-cfac7fec-f370-4b53-a91e-d581793011a0.jpg)
+![SciData 1](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/8c941c04-2382-4ac5-a3f8-942b6f0dec04)
 
 
 
