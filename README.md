@@ -39,7 +39,7 @@ Access to the MultiSenseBadminton Dataset: The dataset for MultiSenseBadminton i
 
 ## Data Annotation
 
-![Annotation Level (1)](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/e4183531-b5b9-4b71-a6ff-6e95d47a1144)
+![Figure6-1](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/281243d5-f841-422f-8b75-3b1dea3753da)
 
 
 ## Data Preprocessing
