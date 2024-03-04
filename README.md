@@ -44,7 +44,7 @@ Access to the MultiSenseBadminton Dataset: The dataset for MultiSenseBadminton i
 
 ## Data Preprocessing
 
-![SciData 1](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/8c941c04-2382-4ac5-a3f8-942b6f0dec04)
+![화면 캡처 2024-03-04 111713](https://github.com/dailyminiii/MultiSenseBadminton/assets/79134282/8672aee8-c37a-4e80-86c6-f4b49ca6ffb8)
 
 
 
